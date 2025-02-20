@@ -1,0 +1,9 @@
+.dashboardPage {
+  background-color: #f7f7f7;
+  height: 100%;
+}
+
+.dashboardRow {
+  margin: 0;
+  padding: 2% 1%;
+}

@@ -1,0 +1,14 @@
+.loadingSpinner {
+  color: #1c3144;
+  margin-bottom: 1%;
+}
+
+Modal {
+  overflow-y: hidden;
+  padding-right: 0 !important;
+}
+
+.modalBackdrop {
+  background-color: #f2f7f5 !important;
+  opacity: 0.7 !important;
+}
