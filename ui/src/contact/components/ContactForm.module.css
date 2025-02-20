@@ -1,0 +1,28 @@
+.contactForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: #f7f7f7;
+}
+
+@media (max-width: 1024px) {
+  .contactTitle {
+    margin-top: 3%;
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .contactTitle {
+    margin-top: 3%;
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contactTitle {
+    margin-top: 5%;
+    font-size: 2rem;
+  }
+}

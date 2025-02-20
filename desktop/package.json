@@ -1,0 +1,32 @@
+{
+  "name": "sudarshana",
+  "version": "1.0.0",
+  "description": "Web application and API's Security Testing Cross-platform Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --disable-blink-features=Autofill"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neelkumarkshah/Sudarshana_.git"
+  },
+  "keywords": [
+    "Web",
+    "application",
+    "API's",
+    "Security",
+    "Testing",
+    "Automated",
+    "Scanner"
+  ],
+  "author": "Neelkumar K. Shah",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/neelkumarkshah/Sudarshana_/issues"
+  },
+  "homepage": "https://github.com/neelkumarkshah/Sudarshana_#readme",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.7.0",
+    "electron": "^34.2.0"
+  }
+}

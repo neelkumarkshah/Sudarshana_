@@ -1,0 +1,28 @@
+.card {
+  box-shadow: 0 0.15rem 0.15rem 0.15rem #eeeeee;
+  padding: 2%;
+  border: none;
+  margin: 1% auto;
+  border-radius: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .card {
+    box-shadow: 0 0.15rem 0.15rem 0.15rem #eeeeee;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    box-shadow: 0 0.15rem 0.15rem 0.15rem #eeeeee;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    box-shadow: 0 0.15rem 0.15rem 0.15rem #eeeeee;
+    padding: 3%;
+    border: none;
+    margin: 5% auto;
+  }
+}

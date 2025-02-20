@@ -1,0 +1,112 @@
+.header {
+  background-color: #ffffff;
+  box-shadow: 0 0.3rem 0.7rem 0.3rem #eeeeee;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 999;
+}
+
+.navLink {
+  margin-right: 2rem;
+  color: #1c3144;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-radius 0.3s ease;
+  display: flex;
+  align-items: center;
+  background-color: #f2f7f5;
+  border-radius: 0.5rem;
+  padding: 1rem 1rem !important;
+}
+
+.icon {
+  margin-right: 0.5rem;
+}
+
+.navLink:last-child {
+  margin-right: 0;
+}
+
+.navLink:hover {
+  color: #f2f7f5;
+  background-color: #1c3144;
+  /* border-radius: 0.5rem; */
+}
+
+.navLink.active {
+  color: #f2f7f5;
+  background-color: #1c3144;
+  /* border-radius: 0.5rem; */
+}
+
+.logout {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* @media (min-width: 1440px) {
+  .brandLogo {
+    width: 35%;
+  }
+
+  .navLink {
+    font-size: 1.1rem;
+  }
+} */
+
+@media (min-width: 769px) and (max-width: 1023px) {
+  .header {
+    padding: 0.5rem;
+  }
+
+  .navCollapse {
+    margin-top: 1%;
+  }
+
+  .navLink {
+    display: inline-flex;
+    margin: 0.5rem;
+    padding: 0.3rem;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .navLink {
+    display: block;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .navCollapse {
+    margin-top: 1%;
+  }
+
+  .header {
+    box-shadow: 0 0.3rem 0.3rem #f2f7f5;
+    padding: 0.5rem 0.5rem;
+    text-align: center;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .navLink {
+    display: block;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .header {
+    text-align: center;
+    align-items: center;
+  }
+}

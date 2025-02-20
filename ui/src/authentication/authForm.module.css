@@ -1,0 +1,61 @@
+Modal {
+  overflow-y: hidden;
+  padding-right: 0 !important;
+}
+
+.authForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f7f7f7;
+}
+
+.modalBackdrop {
+  background-color: #f2f7f5 !important;
+  opacity: 0.7 !important;
+}
+
+.signupLink {
+  color: #1c3144;
+  background-color: #f2f7f5;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.signupLink:hover,
+.signupLink:focus {
+  color: #f2f7f5;
+  background-color: #1c3144;
+  border-radius: 0.5rem;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .formTitle {
+    margin-top: 3%;
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+  .formTitle {
+    margin-top: 3%;
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 280px) and (max-width: 480px) {
+  .formTitle {
+    margin-top: 5%;
+    font-size: 2rem;
+  }
+
+  .signupLink {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 3%;
+  }
+}
