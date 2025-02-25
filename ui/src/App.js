@@ -25,7 +25,7 @@ const App = () => {
       if (token) {
         try {
           const response = await fetch(
-            process.env.REACT_APP_BACKEND_URL + `/users/verifyUsers`,
+            `${process.env.REACT_APP_BACKEND_URL}/users/verifyUsers`,
             {
               method: "GET",
               headers: {
@@ -71,7 +71,6 @@ const App = () => {
     routes = (
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/signup" element={<RegistrationForm />} />
         <Route path="*" element={<Navigate to="/login" />} />

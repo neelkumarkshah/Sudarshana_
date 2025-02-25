@@ -45,9 +45,8 @@ const LoginForm = () => {
 
     try {
       await sleep(3000);
-
       const response = await fetch(
-        process.env.REACT_APP_BACKEND_URL + `/users/login`,
+        `${process.env.REACT_APP_BACKEND_URL}/users/login`,
         {
           method: "POST",
           headers: {
