@@ -6,12 +6,8 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import Home from "./home/pages/Home";
 import PenTest from "./penTesting/pages/PenTest";
 import Dashboard from "./dashboard/pages/Dashboard";
-import Contact from "./contact/pages/Contact";
-import MainHeader from "./shared/components/header/Header";
-import Footer from "./shared/components/footer/Footer";
 import LoginForm from "./authentication/loginForm";
 import RegistrationForm from "./authentication/registrationForm";
 import { AuthContext } from "./shared/context/auth-context";
@@ -70,8 +66,7 @@ const App = () => {
   } else {
     routes = (
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<LoginForm />} />
+        <Route path="/" element={<LoginForm />} />
         <Route path="/signup" element={<RegistrationForm />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
@@ -89,9 +84,7 @@ const App = () => {
       }}
     >
       <Router>
-        <MainHeader />
         <main>{routes}</main>
-        <Footer />
       </Router>
     </AuthContext.Provider>
   );
