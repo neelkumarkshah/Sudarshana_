@@ -86,7 +86,7 @@ const RegistrationForm = () => {
 
       setSuccessMessage("Registration successful!");
       reset();
-      setTimeout(() => navigate("/login"), 2000);
+      setTimeout(() => navigate("/"), 2000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -271,7 +271,7 @@ const RegistrationForm = () => {
                     onClick={handleLoginClick}
                     className={classes.signupLink}
                   >
-                    Sign up
+                    Login
                   </Link>
                 </Row>
                 <ButtonLayout type="submit" className={classes.authBtn}>
