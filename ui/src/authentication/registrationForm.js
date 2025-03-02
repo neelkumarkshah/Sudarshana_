@@ -1,10 +1,10 @@
-import React, { useState, lazy } from "react";
+import React, { useState, lazy, startTransition } from "react";
 import "react-phone-input-2/lib/style.css";
 import { Form, Row, Col, Card, FloatingLabel, Alert } from "react-bootstrap";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import ModalOverlay from "../shared/components/uiElements/modalOverlay/ModalOverlay";
 import classes from "./authForm.module.css";
@@ -86,12 +86,19 @@ const RegistrationForm = () => {
 
       setSuccessMessage("Registration successful!");
       reset();
-      setTimeout(() => navigate("/login"), 2000);
+      setTimeout(() => navigate("/"), 2000);
     } catch (err) {
       setError(err.message);
     } finally {
       setShowOverlay(false);
     }
+  };
+
+  const handleLoginClick = (event) => {
+    event.preventDefault();
+    startTransition(() => {
+      navigate("/");
+    });
   };
 
   const styles = {
@@ -259,6 +266,13 @@ const RegistrationForm = () => {
                       </Alert>
                     )}
                   </Col>
+                  <Link
+                    to="/login"
+                    onClick={handleLoginClick}
+                    className={classes.signupLink}
+                  >
+                    Login
+                  </Link>
                 </Row>
                 <ButtonLayout type="submit" className={classes.authBtn}>
                   Register
