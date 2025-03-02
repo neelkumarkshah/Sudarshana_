@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, Link } from "react-router-dom";
 
+import brandLogo from "../shared/assets/images/sudarshanaLogo.png";
 import ModalOverlay from "../shared/components/uiElements/modalOverlay/ModalOverlay";
 import { AuthContext } from "../shared/context/auth-context";
 import classes from "./authForm.module.css";
@@ -80,7 +81,7 @@ const LoginForm = () => {
   return (
     <div className={classes.authForm}>
       <Row className="justify-content-center w-100">
-        <Col sm={12} md={8} lg={4} className={classes.boxForm}>
+        <Col sm={12} md={5} lg={5}>
           <CardLayout>
             <Card.Body>
               <Form onSubmit={handleSubmit(onSubmit)}>
@@ -126,7 +127,7 @@ const LoginForm = () => {
                     <Link
                       to="/signup"
                       onClick={handleSignupClick}
-                      className={classes.signupLink}
+                      className={classes.authLink}
                     >
                       Sign up
                     </Link>
@@ -145,6 +146,23 @@ const LoginForm = () => {
               </Form>
             </Card.Body>
           </CardLayout>
+        </Col>
+        <Col
+          sm={12}
+          md={1}
+          lg={1}
+          className="d-flex justify-content-center align-items-center"
+        >
+          <hr className={classes.hr} />
+        </Col>
+        <Col sm={12} md={5} lg={5} className={classes.brandLogoCol}>
+          <img
+            src={brandLogo}
+            alt="Sudarshana Logo"
+            className={classes.brandLogo}
+            // width={200}
+            // height={200}
+          />
         </Col>
       </Row>
       <ModalOverlay

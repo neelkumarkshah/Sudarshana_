@@ -6,6 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, Link } from "react-router-dom";
 
+import brandLogo from "../shared/assets/images/sudarshanaLogo.png";
 import ModalOverlay from "../shared/components/uiElements/modalOverlay/ModalOverlay";
 import classes from "./authForm.module.css";
 import CardLayout from "../shared/components/uiElements/card/Card";
@@ -142,7 +143,22 @@ const RegistrationForm = () => {
   return (
     <div className={classes.authForm}>
       <Row className="justify-content-center w-100">
-        <Col md={8} lg={6}>
+        <Col sm={12} md={5} lg={5} className={classes.brandLogoCol}>
+          <img
+            src={brandLogo}
+            alt="Sudarshana Logo"
+            className={classes.brandLogo}
+          />
+        </Col>
+        <Col
+          sm={12}
+          md={1}
+          lg={1}
+          className="d-flex justify-content-center align-items-center"
+        >
+          <hr className={classes.hr} />
+        </Col>
+        <Col sm={12} md={5} lg={5}>
           <CardLayout>
             <style>{cssOverride}</style>
             <Card.Body>
@@ -254,6 +270,16 @@ const RegistrationForm = () => {
                   </Col>
                 </Row>
                 <Row>
+                  <Col sm={12} md={12} lg={12}>
+                    <span>Already have an account? </span>
+                    <Link
+                      to="/"
+                      onClick={handleLoginClick}
+                      className={classes.authLink}
+                    >
+                      Login
+                    </Link>
+                  </Col>
                   <Col sm={12} md={12} lg={12} className="mt-3 mb-2">
                     {error && (
                       <Alert variant="danger" className="text-danger">
@@ -266,13 +292,6 @@ const RegistrationForm = () => {
                       </Alert>
                     )}
                   </Col>
-                  <Link
-                    to="/login"
-                    onClick={handleLoginClick}
-                    className={classes.signupLink}
-                  >
-                    Login
-                  </Link>
                 </Row>
                 <ButtonLayout type="submit" className={classes.authBtn}>
                   Register

@@ -94,6 +94,12 @@ const StartScan = async (req, res, next) => {
       //     if (errorOutput) logger.error("Error:", errorOutput);
       //   }
       // });
+      if (AnalyzeHeadersIssues && AnalyzeHeadersIssues.length > 0) {
+        issues.push(...AnalyzeHeadersIssues);
+        logger.info(`Header issues found for URL: ${url}`);
+      } else {
+        logger.info(`No header issues found for URL: ${url}`);
+      }
     } catch (err) {
       logger.warn(`Error analyzing headers for URL ${url}: ${err}`);
     }

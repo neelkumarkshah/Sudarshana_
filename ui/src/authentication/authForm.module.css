@@ -12,12 +12,18 @@ Modal {
   background-color: #f7f7f7;
 }
 
+.brandLogoCol {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .modalBackdrop {
   background-color: #f2f7f5 !important;
   opacity: 0.7 !important;
 }
 
-.signupLink {
+.authLink {
   color: #1c3144;
   background-color: #f2f7f5;
   font-weight: 600;
@@ -25,11 +31,19 @@ Modal {
   padding: 0.5rem 1rem;
 }
 
-.signupLink:hover,
-.signupLink:focus {
+.authLink:hover,
+.authLink:focus {
   color: #f2f7f5;
   background-color: #1c3144;
   border-radius: 0.5rem;
+}
+
+.hr {
+  border-color: #b8b8b8;
+  width: 2px;
+  height: 100%;
+  background-color: #b8b8b8;
+  margin: 0 auto;
 }
 
 @media (min-width: 768px) and (max-width: 1024px) {
@@ -52,7 +66,7 @@ Modal {
     font-size: 2rem;
   }
 
-  .signupLink {
+  .authLink {
     display: flex;
     justify-content: center;
     align-items: center;
