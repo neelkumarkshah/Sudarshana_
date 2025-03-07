@@ -17,7 +17,6 @@ const createWindow = () => {
         : "sudarshana.png"
     ),
     // autoHideMenuBar: true,
-    // frame: true,
     webPreferences: {
       preload: path.join(__dirname, "utils", "preload.js"),
       contextIsolation: true,
