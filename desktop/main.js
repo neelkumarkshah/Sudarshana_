@@ -17,7 +17,7 @@ const createWindow = () => {
         : "sudarshana.png"
     ),
     // autoHideMenuBar: true,
-    // frame: true,
+    title: "Sudarshana - E-Rakshak",
     webPreferences: {
       preload: path.join(__dirname, "utils", "preload.js"),
       contextIsolation: true,
