@@ -81,7 +81,7 @@ const LoginForm = () => {
   return (
     <div className={classes.authForm}>
       <Row className="justify-content-center w-100">
-        <Col sm={12} md={5} lg={5}>
+        <Col sm={12} md={12} lg={5} className="order-3 order-lg-1">
           <CardLayout>
             <Card.Body>
               <Form onSubmit={handleSubmit(onSubmit)}>
@@ -151,11 +151,16 @@ const LoginForm = () => {
           sm={12}
           md={1}
           lg={1}
-          className="d-flex justify-content-center align-items-center"
+          className="d-flex justify-content-center align-items-center order-2 order-lg-2"
         >
           <hr className={classes.hr} />
         </Col>
-        <Col sm={12} md={5} lg={5} className={classes.brandLogoCol}>
+        <Col
+          sm={12}
+          md={12}
+          lg={5}
+          className={`${classes.brandLogoCol} order-1 order-lg-2 text-center`}
+        >
           <img
             src={brandLogo}
             alt="Sudarshana Logo"

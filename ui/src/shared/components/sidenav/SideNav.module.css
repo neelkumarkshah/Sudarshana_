@@ -1,0 +1,62 @@
+.sidenav {
+  height: 100vh;
+  background-color: #f2f7f5;
+  color: #1c3144;
+  transition: width 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0.15rem 0.2rem 0.2rem #eeeeee;
+}
+
+.sidenav.closed {
+  width: 25%;
+}
+
+.sidenav.open {
+  width: 100%;
+}
+
+.navLink {
+  color: #1c3144;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  padding-top: 5%;
+  padding-bottom: 5%;
+  width: 100%;
+  transition: 0.3s;
+}
+
+.navLink:hover,
+.navLink.active {
+  background-color: #1c3144;
+  color: #f2f7f5;
+}
+
+.icon {
+  margin-right: 7%;
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 7%;
+}
+
+.brandLogo {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .sidenav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 999;
+  }
+}

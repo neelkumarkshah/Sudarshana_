@@ -5,13 +5,13 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import MainNav from "./shared/components/header/Header";
 import PenTest from "./penTesting/pages/PenTest";
 import Dashboard from "./dashboard/pages/Dashboard";
 import LoginForm from "./authentication/loginForm";
 import RegistrationForm from "./authentication/registrationForm";
 import { AuthContext } from "./shared/context/auth-context";
 import { useAuth } from "./shared/hooks/auth-hook";
+import Layout from "./shared/components/layout/Layout";
 
 const App = () => {
   const { token, login, logout, userId } = useAuth();
@@ -58,8 +58,10 @@ const App = () => {
     routes = (
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/pentesting" element={<PenTest />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/" element={<Layout />}>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="pentesting" element={<PenTest />} />
+        </Route>
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     );
@@ -68,7 +70,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<LoginForm />} />
         <Route path="/signup" element={<RegistrationForm />} />
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     );
   }
@@ -83,9 +85,7 @@ const App = () => {
         logout: logout,
       }}
     >
-      <Router>
-        <main>{routes}</main>
-      </Router>
+      <Router>{routes}</Router>
     </AuthContext.Provider>
   );
 };

@@ -44,14 +44,14 @@ const Dashboard = () => {
   return (
     <div className={classes.dashboardPage}>
       <Row className={classes.dashboardRow}>
-        <Col sm={12} md={12} lg={12}>
+        <Col xs={12}>
           {errors && (
             <Alert variant="danger" className="text-danger">
               {errors}
             </Alert>
           )}
         </Col>
-        <Col sm={12} md={12} lg={12}>
+        <Col xs={12}>
           <DashboardContent scanData={scanData} token={token} />
         </Col>
       </Row>

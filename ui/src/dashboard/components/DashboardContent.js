@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Card, Table, Alert, Pagination } from "react-bootstrap";
+import { Card, Table, Alert, Pagination } from "react-bootstrap";
 import DashboardTableLoader from "./DashboardTableLoader";
 import ModalOverlay from "../../shared/components/uiElements/modalOverlay/ModalOverlay";
 import pdfIconOn from "../../shared/assets/images/pdfIconOn.png";
@@ -184,119 +184,117 @@ const DashboardContent = ({ scanData, token }) => {
   const currentData = scanData.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <Row className={classes.dashboardRow}>
+    <>
       <style>{cssOverride}</style>
-      <Col sm={12} md={12} lg={12}>
-        {loading ? (
-          <DashboardTableLoader />
-        ) : scanData && scanData.length > 0 ? (
-          <Card className={classes.dashboardCard}>
-            <Card.Body>
-              <div className="table-responsive">
-                <Table>
-                  <colgroup>
-                    <col style={{ width: "10%" }} />
-                    <col style={{ width: "16%" }} />
-                    <col style={{ width: "14%" }} />
-                    <col style={{ width: "22%" }} />
-                    <col style={{ width: "10%" }} />
-                    <col style={{ width: "14%" }} />
-                    <col style={{ width: "14%" }} />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Application Name</th>
-                      <th>Scan Type</th>
-                      <th>Targeted URL</th>
-                      <th>Total Issues</th>
-                      <th>Date</th>
-                      <th>PDF Report</th>
+      {/* {loading ? ( */}
+      <DashboardTableLoader />
+      {/* ) : scanData && scanData.length > 0 ? (
+        <Card className={classes.dashboardCard}>
+          <Card.Body>
+            <div className="table-responsive">
+              <Table>
+                <colgroup>
+                  <col style={{ width: "10%" }} />
+                  <col style={{ width: "16%" }} />
+                  <col style={{ width: "14%" }} />
+                  <col style={{ width: "22%" }} />
+                  <col style={{ width: "10%" }} />
+                  <col style={{ width: "14%" }} />
+                  <col style={{ width: "14%" }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Application Name</th>
+                    <th>Scan Type</th>
+                    <th>Targeted URL</th>
+                    <th>Total Issues</th>
+                    <th>Date</th>
+                    <th>PDF Report</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentData.map((scan, index) => (
+                    <tr key={scan._id}>
+                      <td>{`#${scan._id.slice(0, 4)}...${scan._id.slice(
+                        -4
+                      )}`}</td>
+                      <td>{scan.applicationName}</td>
+                      <td>{scan.scanType}</td>
+                      <td>{scan.targetedUrl}</td>
+                      <td>{scan.issues.length}</td>
+                      <td>{formatDate(scan.timestamp)}</td>
+                      <td>
+                        <img
+                          src={
+                            iconState[index] === "clicked"
+                              ? pdfIconOn
+                              : iconState[index] === "hovered"
+                              ? pdfIconOn
+                              : pdfIcon
+                          }
+                          alt="PDF Icon"
+                          className={classes.pdfIcon}
+                          onMouseEnter={() => handleHover(index)}
+                          onMouseLeave={() => handleLeave(index)}
+                          onClick={() =>
+                            handleDownload(
+                              scan._id,
+                              scan.applicationName,
+                              index
+                            )
+                          }
+                        />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.map((scan, index) => (
-                      <tr key={scan._id}>
-                        <td>{`#${scan._id.slice(0, 4)}...${scan._id.slice(
-                          -4
-                        )}`}</td>
-                        <td>{scan.applicationName}</td>
-                        <td>{scan.scanType}</td>
-                        <td>{scan.targetedUrl}</td>
-                        <td>{scan.issues.length}</td>
-                        <td>{formatDate(scan.timestamp)}</td>
-                        <td>
-                          <img
-                            src={
-                              iconState[index] === "clicked"
-                                ? pdfIconOn
-                                : iconState[index] === "hovered"
-                                ? pdfIconOn
-                                : pdfIcon
-                            }
-                            alt="PDF Icon"
-                            className={classes.pdfIcon}
-                            onMouseEnter={() => handleHover(index)}
-                            onMouseLeave={() => handleLeave(index)}
-                            onClick={() =>
-                              handleDownload(
-                                scan._id,
-                                scan.applicationName,
-                                index
-                              )
-                            }
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-                <Pagination className="justify-content-center mt-4 mb-0">
-                  <Pagination.First
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                  />
-                  <Pagination.Prev
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  />
-                  {[...Array(totalPages).keys()].map((pageNumber) => (
-                    <Pagination.Item
-                      key={pageNumber + 1}
-                      active={pageNumber + 1 === currentPage}
-                      onClick={() => handlePageChange(pageNumber + 1)}
-                    >
-                      {pageNumber + 1}
-                    </Pagination.Item>
                   ))}
-                  <Pagination.Next
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  />
-                  <Pagination.Last
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                  />
-                </Pagination>
-              </div>
-            </Card.Body>
-          </Card>
-        ) : (
-          <Card className={classes.dashboardCard}>
-            <Alert variant="info" className={`text-center ${classes.alert}`}>
-              No data available.
-            </Alert>
-          </Card>
-        )}
-        {error && <Alert variant="danger">{error.message || error}</Alert>}
-      </Col>
+                </tbody>
+              </Table>
+              <Pagination className="justify-content-center mt-4 mb-0">
+                <Pagination.First
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                />
+                <Pagination.Prev
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+                {[...Array(totalPages).keys()].map((pageNumber) => (
+                  <Pagination.Item
+                    key={pageNumber + 1}
+                    active={pageNumber + 1 === currentPage}
+                    onClick={() => handlePageChange(pageNumber + 1)}
+                  >
+                    {pageNumber + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                />
+                <Pagination.Last
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                />
+              </Pagination>
+            </div>
+          </Card.Body>
+        </Card>
+      ) : (
+        <Card className={classes.dashboardCard}>
+          <Alert variant="info" className={`text-center ${classes.alert}`}>
+            No data available.
+          </Alert>
+        </Card>
+      )} */}
+      {error && <Alert variant="danger">{error.message || error}</Alert>}
 
       <ModalOverlay
         show={showOverlay}
         onHide={() => setShowOverlay(false)}
         message={modalMessage}
       />
-    </Row>
+    </>
   );
 };
 

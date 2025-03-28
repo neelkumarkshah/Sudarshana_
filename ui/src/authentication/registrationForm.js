@@ -143,7 +143,7 @@ const RegistrationForm = () => {
   return (
     <div className={classes.authForm}>
       <Row className="justify-content-center w-100">
-        <Col sm={12} md={5} lg={5} className={classes.brandLogoCol}>
+        <Col sm={12} md={12} lg={5} className={classes.brandLogoCol}>
           <img
             src={brandLogo}
             alt="Sudarshana Logo"
@@ -158,7 +158,7 @@ const RegistrationForm = () => {
         >
           <hr className={classes.hr} />
         </Col>
-        <Col sm={12} md={5} lg={5}>
+        <Col sm={12} md={12} lg={5}>
           <CardLayout>
             <style>{cssOverride}</style>
             <Card.Body>
