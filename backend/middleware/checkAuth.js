@@ -16,7 +16,6 @@ module.exports = async (req, res, next) => {
       return next(error);
     }
 
-    // Authorization: 'Bearer TOKEN'
     const token = await authorizationHeader.split(" ")[1];
 
     if (!token) {

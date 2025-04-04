@@ -186,9 +186,9 @@ const DashboardContent = ({ scanData, token }) => {
   return (
     <>
       <style>{cssOverride}</style>
-      {/* {loading ? ( */}
-      <DashboardTableLoader />
-      {/* ) : scanData && scanData.length > 0 ? (
+      {loading ? (
+        <DashboardTableLoader />
+      ) : scanData && scanData.length > 0 ? (
         <Card className={classes.dashboardCard}>
           <Card.Body>
             <div className="table-responsive">
@@ -286,9 +286,8 @@ const DashboardContent = ({ scanData, token }) => {
             No data available.
           </Alert>
         </Card>
-      )} */}
+      )}
       {error && <Alert variant="danger">{error.message || error}</Alert>}
-
       <ModalOverlay
         show={showOverlay}
         onHide={() => setShowOverlay(false)}

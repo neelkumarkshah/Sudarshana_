@@ -1,24 +1,13 @@
 .sidenav {
-  height: 100vh;
+  height: 100%;
   background-color: #f2f7f5;
   color: #1c3144;
   transition: width 0.3s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   box-shadow: 0 0.15rem 0.2rem 0.2rem #eeeeee;
 }
 
-.sidenav.closed {
-  width: 25%;
-}
-
-.sidenav.open {
-  width: 100%;
-}
-
 .navLink {
-  color: #1c3144;
+  color: #1c3144 !important;
   font-weight: 700;
   font-size: 1rem;
   text-decoration: none;
@@ -27,13 +16,18 @@
   padding-top: 5%;
   padding-bottom: 5%;
   width: 100%;
+  background-color: #f2f7f5 !important;
   transition: 0.3s;
+  border: none !important;
+  border-radius: 0 !important;
 }
 
 .navLink:hover,
 .navLink.active {
-  background-color: #1c3144;
-  color: #f2f7f5;
+  background-color: #1c3144 !important;
+  color: #f2f7f5 !important;
+  border: none !important;
+  border-radius: 0 !important;
 }
 
 .icon {
@@ -44,11 +38,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 7%;
+  padding: 5%;
 }
 
 .brandLogo {
   width: 100%;
+}
+
+.hr {
+  border-color: #b8b8b8;
+  width: 100%;
+  background-color: #b8b8b8;
+  margin: 0 auto 5% auto;
 }
 
 @media (max-width: 768px) {

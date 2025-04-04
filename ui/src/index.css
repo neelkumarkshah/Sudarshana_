@@ -15,11 +15,16 @@ body {
   flex-direction: column;
 }
 
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 #root {
   display: flex;
   flex-direction: column;
   flex: 1;
-  background-color: #f7f7f7;
 }
 
 main {

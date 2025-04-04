@@ -39,61 +39,22 @@ const StartScan = async (req, res, next) => {
       return next(new HttpError("User not found", 404));
     }
 
-    // let headers;
-    // try {
-    //   const response = await axios.get(url);
-    //   headers = response.headers;
-    //   console.log("headers:", headers);
-    // } catch (err) {
-    //   return next(
-    //     new HttpError("Failed to fetch headers from the provided URL.", 500)
-    //   );
-    // }
+    let headers;
+    try {
+      const response = await axios.get(url);
+      headers = response.headers;
+      console.log("headers:", headers);
+    } catch (err) {
+      return next(
+        new HttpError("Failed to fetch headers from the provided URL.", 500)
+      );
+    }
 
     const issues = [];
 
     try {
-      const AnalyzeHeadersIssues = await AnalyzeHeaders(url);
-      // const AnalyzeHeadersIssues = spawn("python", [
-      //   path.join(
-      //     __dirname,
-      //     "..",
-      //     "utils",
-      //     "pentestChecklists",
-      //     "SudarshanaChakra",
-      //     "SudarshanaChakra.py"
-      //   ),
-      //   "--url",
-      //   url,
-      //   "--output",
-      //   "json",
-      // ]);
-      // let output = "";
-      // let errorOutput = "";
-      // AnalyzeHeadersIssues.stdout.on("data", (data) => {
-      //   output += data.toString();
-      // });
-      // AnalyzeHeadersIssues.stderr.on("data", (data) => {
-      //   errorOutput += data.toString();
-      // });
-      // AnalyzeHeadersIssues.on("close", (code) => {
-      //   if (code === 0) {
-      //     try {
-      //       const parsedOutput = JSON.parse(output);
-      //       if (parsedOutput && parsedOutput.length > 0) {
-      //         issues.push(...parsedOutput);
-      //         logger.info(`Header issues found for URL: ${url}`);
-      //       } else {
-      //         logger.info(`No header issues found for URL: ${url}`);
-      //       }
-      //     } catch (parseError) {
-      //       logger.error("Error parsing JSON output:", parseError.message);
-      //     }
-      //   } else {
-      //     console.error(`Process exited with code ${code}`);
-      //     if (errorOutput) logger.error("Error:", errorOutput);
-      //   }
-      // });
+      const AnalyzeHeadersIssues = await AnalyzeHeaders(headers, url);
+
       if (AnalyzeHeadersIssues && AnalyzeHeadersIssues.length > 0) {
         issues.push(...AnalyzeHeadersIssues);
         logger.info(`Header issues found for URL: ${url}`);
@@ -121,6 +82,7 @@ const StartScan = async (req, res, next) => {
     //   }
     // }
     // .length > 0 ? issues : [{ Message: "No issues found" }]
+
     const newScan = new Scan({
       userId,
       issues: issues,

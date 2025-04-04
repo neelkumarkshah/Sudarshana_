@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Nav, Navbar } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -26,17 +26,17 @@ const SideNav = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
   return (
     <aside className={`${classes.sidenav}`}>
-      <Navbar.Brand as={Link} to="/" className={classes.logo}>
+      <Link to="/" className={classes.logo}>
         <img
           src={brandLogo}
           alt="Sudarshana Logo"
           className={classes.brandLogo}
         />
-      </Navbar.Brand>
-
-      <Nav>
+      </Link>
+      <hr className={classes.hr} />
+      <div>
         {auth.isLoggedIn && (
-          <Nav.Link
+          <Button
             as={Link}
             to="/dashboard"
             className={`${classes.navLink} ${isActive("/dashboard")}`}
@@ -46,27 +46,30 @@ const SideNav = ({ isSidebarOpen, setIsSidebarOpen }) => {
               className={classes.icon}
             />
             <span>Dashboard</span>
-          </Nav.Link>
+          </Button>
         )}
 
         {auth.isLoggedIn && (
-          <Nav.Link
+          <Button
             as={Link}
             to="/pentesting"
             className={`${classes.navLink} ${isActive("/pentesting")}`}
           >
             <FontAwesomeIcon icon={faShieldAlt} className={classes.icon} />
             <span>Pentest</span>
-          </Nav.Link>
+          </Button>
         )}
 
         {auth.isLoggedIn && (
-          <Nav.Link className={classes.navLink} onClick={handleLogout}>
+          <Button
+            className={`${classes.navLink} ${classes.logoutBtn}`}
+            onClick={handleLogout}
+          >
             <FontAwesomeIcon icon={faSignOutAlt} className={classes.icon} />
             <span>Logout</span>
-          </Nav.Link>
+          </Button>
         )}
-      </Nav>
+      </div>
     </aside>
   );
 };

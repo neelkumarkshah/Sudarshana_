@@ -165,8 +165,6 @@ const LoginForm = () => {
             src={brandLogo}
             alt="Sudarshana Logo"
             className={classes.brandLogo}
-            // width={200}
-            // height={200}
           />
         </Col>
       </Row>
