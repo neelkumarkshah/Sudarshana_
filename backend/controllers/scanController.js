@@ -43,7 +43,6 @@ const StartScan = async (req, res, next) => {
     try {
       const response = await axios.get(url);
       headers = response.headers;
-      console.log("headers:", headers);
     } catch (err) {
       return next(
         new HttpError("Failed to fetch headers from the provided URL.", 500)
@@ -56,7 +55,15 @@ const StartScan = async (req, res, next) => {
       const AnalyzeHeadersIssues = await AnalyzeHeaders(headers, url);
 
       if (AnalyzeHeadersIssues && AnalyzeHeadersIssues.length > 0) {
-        issues.push(...AnalyzeHeadersIssues);
+        const FinalAnalyzeHeadersIssues = AnalyzeHeadersIssues.map((issue) => ({
+          ...issue,
+          POC:
+            typeof issue.POC === "object"
+              ? JSON.stringify(issue.POC)
+              : issue.POC,
+        }));
+
+        issues.push(...FinalAnalyzeHeadersIssues);
         logger.info(`Header issues found for URL: ${url}`);
       } else {
         logger.info(`No header issues found for URL: ${url}`);
@@ -97,7 +104,7 @@ const StartScan = async (req, res, next) => {
       user.scans.push(savedScan._id);
       await user.save();
 
-      res.status(201).json({
+      const scanResponse = {
         success: true,
         scan: {
           scanId: savedScan._id,
@@ -107,7 +114,9 @@ const StartScan = async (req, res, next) => {
           applicationName,
           timestamp: savedScan.timestamp,
         },
-      });
+      };
+
+      res.status(201).json(scanResponse);
     } catch (err) {
       return next(
         new HttpError(

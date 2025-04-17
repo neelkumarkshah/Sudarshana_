@@ -8,8 +8,6 @@ const isAuth = require("../middleware/checkAuth");
 
 const router = express.Router();
 
-router.use(isAuth);
-
 router.post(
   "/startScan",
   [
@@ -23,13 +21,19 @@ router.post(
       .isIn(["Web Application", "API"])
       .withMessage("Please select a valid scan type: 'web' or 'api'."),
   ],
+  isAuth,
   scanController.StartScan
 );
 
-router.post("/uploadPdf", upload.single("pdfFile"), scanController.UploadPDF);
+router.post(
+  "/uploadPdf",
+  isAuth,
+  upload.single("pdfFile"),
+  scanController.UploadPDF
+);
 
-router.get("/downloadPdf/:scanId", scanController.DownloadPDF);
+router.get("/downloadPdf/:scanId", isAuth, scanController.DownloadPDF);
 
-router.post("/deleteScan", scanController.DeleteScan);
+router.post("/deleteScan", isAuth, scanController.DeleteScan);
 
 module.exports = router;

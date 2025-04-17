@@ -28,93 +28,109 @@ const certData = {
   cert: fs.readFileSync(config.httpsCert),
 };
 
+// Rate Limiting
 const limit = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
+  windowMs: 1 * 60 * 1000,
   max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
+app.use(limit);
 
-// -------Security middlewares-------
-// CORS
+// Compression
+app.use(compression());
+
+// Security Headers with Helmet
 app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Authorization"],
-    credentials: true,
+  helmet({
+    crossOriginResourcePolicy: { policy: "same-site" },
+    crossOriginEmbedderPolicy: true,
+    dnsPrefetchControl: true,
+    hidePoweredBy: true,
+    hsts: { maxAge: 31536000, includeSubDomains: true },
+    ieNoOpen: true,
+    noSniff: true,
+    permittedCrossDomainPolicies: { permittedPolicies: "none" },
+    referrerPolicy: { policy: "no-referrer" },
+    xssFilter: true,
   })
 );
 
+// Strong Content Security Policy (CSP)
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "https:"],
+      imgSrc: ["'self'", "data:"],
+      fontSrc: ["'self'", "https:"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: [],
+      blockAllMixedContent: [],
+    },
+  })
+);
+
+// Clickjacking Protection
+app.use(helmet.frameguard({ action: "sameorigin" }));
+
+// CORS Configuration – Strict and Controlled
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+    optionsSuccessStatus: 204,
+  })
+);
+
+// // Manual CORS Headers
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
-
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PATCH, DELETE, OPTIONS"
+  );
   next();
 });
-
-app.use(helmet());
-app.use(compression());
-app.use(limit); // Apply rate limiter to all requests
-app.use(helmet.frameguard({ action: "same-origin" }));
-// app.use(
-//   helmet.contentSecurityPolicy({
-//     directives: {
-//       defaultSrc: ["'self'"],
-//       scriptSrc: ["'self'"],
-//       styleSrc: ["'self'"],
-//       scriptSrcAttr: ["'self'"],
-//       imgSrc: ["'self'", "data:"],
-//       fontSrc: ["'self'"],
-//       connectSrc: ["'self'", "https://sudarshana.vercel.app"],
-//       frameSrc: ["'self'"],
-//       frameAncestors: ["'self'"],
-//       objectSrc: ["'none'"],
-//       mediaSrc: ["'self'"],
-//       baseUri: ["'self'"],
-//       formAction: ["'self'"],
-//       // upgradeInsecureRequests: [],
-//       // // Automatically upgrade HTTP requests to HTTPS
-
-//       // blockAllMixedContent: [],
-//       // Block loading mixed (HTTP) content when on HTTPS
-//     },
-//     //  reportOnly: false,
-//     // Set to true during testing to monitor violations without enforcing
-//   })
-// );
 
 // Routes
 app.use("/users", userRoutes);
 app.use("/pentesting", scanRoutes);
 app.use("/contact", contactRoutes);
 
+// Route not found handler
 app.use((req, res, next) => {
   const error = new HttpError("Could not find this route.", 404);
   throw error;
 });
 
-// Error handling middleware
+// Global error handler
 app.use((error, req, res, next) => {
-  if (res.headersSent) {
-    return next(error);
-  }
-
+  if (res.headersSent) return next(error);
   const status = error.statusCode || 500;
   const message = error.message || "An unexpected error occurred.";
   const data = error.data;
   res.status(status).json({ message, data });
 });
 
-// Connect to MongoDB and start HTTPS server
+// Connect to DB and start HTTPS server
 mongoose
   .connect(config.mongoURI, { dbName: "sudarshana" })
   .then(() => {
-    // Start HTTPS server once MongoDB connection is established
-    // const server = https.createServer(certData, app);
+    // https.createServer(certData, app).listen(config.port, ...
     app.listen(config.port, () => {
       logger.info(`Server is up and running...`);
     });
