@@ -4,7 +4,8 @@
   "description": "Web application and API's Security Testing Cross-platform Desktop Application",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --disable-blink-features=Autofill"
+    "start": "electron .",
+    "dev": "nodemon --exec electron ."
   },
   "repository": {
     "type": "git",
@@ -28,5 +29,8 @@
   "devDependencies": {
     "@electron-forge/cli": "^7.7.0",
     "electron": "^34.2.0"
+  },
+  "dependencies": {
+    "electron-window-state": "^5.0.3"
   }
 }

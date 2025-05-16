@@ -58,7 +58,7 @@ const App = () => {
   if (token) {
     routes = (
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="/" element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="pentesting" element={<PenTest />} />

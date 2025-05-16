@@ -11,9 +11,9 @@ const logger = require("../configuration/logger");
 const {
   AnalyzeHeaders,
 } = require("../utils/penTestChecklists/httpsHeaders/httpHeaders");
-// const {
-//   SSLTLSCheck,
-// } = require("../utils/penTestChecklists/sslTlsCheck/sslTlsCheck");
+const {
+  SSLTLSCheck,
+} = require("../utils/penTestChecklists/sslTlsCheck/sslTlsCheck");
 
 const StartScan = async (req, res, next) => {
   const errors = validationResult(req);
@@ -55,15 +55,15 @@ const StartScan = async (req, res, next) => {
       const AnalyzeHeadersIssues = await AnalyzeHeaders(headers, url);
 
       if (AnalyzeHeadersIssues && AnalyzeHeadersIssues.length > 0) {
-        const FinalAnalyzeHeadersIssues = AnalyzeHeadersIssues.map((issue) => ({
-          ...issue,
-          POC:
-            typeof issue.POC === "object"
-              ? JSON.stringify(issue.POC)
-              : issue.POC,
-        }));
+        // const FinalAnalyzeHeadersIssues = AnalyzeHeadersIssues.map((issue) => ({
+        //   ...issue,
+        //   POC:
+        //     typeof issue.POC === "object"
+        //       ? JSON.stringify(issue.POC)
+        //       : issue.POC,
+        // }));
 
-        issues.push(...FinalAnalyzeHeadersIssues);
+        issues.push(...AnalyzeHeadersIssues);
         logger.info(`Header issues found for URL: ${url}`);
       } else {
         logger.info(`No header issues found for URL: ${url}`);
@@ -73,22 +73,28 @@ const StartScan = async (req, res, next) => {
     }
 
     // SSL/TLS checks
-    // if (url.startsWith("https://")) {
-    //   try {
-    //     const SSLTLSCheckIssues = await SSLTLSCheck(url);
-    //     if (SSLTLSCheckIssues && SSLTLSCheckIssues.length > 0) {
-    //       issues.push(...SSLTLSCheckIssues);
-    //       logger.info(
-    //         `SSLTLSCheck completed. Issues found: ${SSLTLSCheckIssues.length}`
-    //       );
-    //     } else {
-    //       logger.info(`No SSL/TLS issues found for URL: ${url}`);
-    //     }
-    //   } catch (err) {
-    //     logger.warn(`Error performing SSL/TLS check for URL ${url}: ${err}`);
-    //   }
-    // }
-    // .length > 0 ? issues : [{ Message: "No issues found" }]
+    if (url.startsWith("https://")) {
+      try {
+        const SSLTLSCheckIssues = await SSLTLSCheck(url);
+        if (
+          SSLTLSCheckIssues &&
+          SSLTLSCheckIssues.length > 0 &&
+          !(
+            SSLTLSCheckIssues.length === 1 &&
+            SSLTLSCheckIssues[0].Message === "No SSL/TLS issues found"
+          )
+        ) {
+          issues.push(...SSLTLSCheckIssues);
+          logger.info(
+            `SSLTLSCheck completed. Issues found: ${SSLTLSCheckIssues.length}`
+          );
+        } else {
+          logger.info(`No SSL/TLS issues found for URL: ${url}`);
+        }
+      } catch (err) {
+        logger.warn(`Error performing SSL/TLS check for URL ${url}: ${err}`);
+      }
+    }
 
     const newScan = new Scan({
       userId,

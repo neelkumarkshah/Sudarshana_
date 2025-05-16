@@ -1,10 +1,14 @@
 const { app, BrowserWindow, ipcMain, screen } = require("electron/main");
 const path = require("node:path");
+const isDev = require("electron-is-dev");
+const { autoUpdater } = require("electron-updater");
+
+let mainWindow;
 
 const createWindow = () => {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width,
     height,
     icon: path.join(
@@ -16,41 +20,42 @@ const createWindow = () => {
         ? "sudarshana.icns"
         : "sudarshana.png"
     ),
-    // autoHideMenuBar: true,
     title: "Sudarshana - E-Rakshak",
     webPreferences: {
       preload: path.join(__dirname, "utils", "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true,
     },
     fullscreenable: true,
     resizable: true,
   });
 
-  win.maximize();
+  mainWindow.maximize();
 
-  win.loadURL("http://localhost:3000");
+  if (isDev) {
+    mainWindow.loadURL("http://localhost:3000");
+    mainWindow.webContents.openDevTools();
+  } else {
+    mainWindow.loadFile(path.join(__dirname, "client", "build", "index.html"));
+  }
 
-  win.on("closed", () => {
-    win = null;
+  mainWindow.on("closed", () => {
+    mainWindow = null;
   });
 
-  // win.loadFile("index.html");
+  autoUpdater.checkForUpdatesAndNotify();
 };
 
 app.whenReady().then(() => {
-  ipcMain.handle("ping", () => "pong");
+  setupIPC();
   createWindow();
 
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  if (process.platform !== "darwin") app.quit();
 });
