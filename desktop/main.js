@@ -26,9 +26,10 @@ const createWindow = () => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      backgroundThrottling: false,
     },
     fullscreenable: true,
-    resizable: true,
+    resizable: false,
   });
 
   mainWindow.maximize();
