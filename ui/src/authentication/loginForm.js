@@ -46,26 +46,17 @@ const LoginForm = () => {
 
     try {
       await sleep(3000);
-      const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/users/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
 
-      if (!response.ok) {
-        throw new Error("Login failed: ", response.message);
+      const response = await window.api.invoke("loginUser", data);
+
+      if (response.success) {
+        auth.login(response.data.userId, response.data.token);
+        navigate("/dashboard");
+      } else {
+        setError(response.message || "Login failed");
       }
-
-      const responseData = await response.json();
-      auth.login(responseData.userId, responseData.token);
-      navigate("/dashboard");
     } catch (error) {
-      setError(error.message);
+      setError(error?.message || "An unexpected error occurred");
     } finally {
       setShowOverlay(false);
     }

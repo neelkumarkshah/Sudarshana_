@@ -101,24 +101,14 @@ const Signup = async (req, res, next) => {
       return next(error);
     }
 
+    const userId = newUser.id;
+
     let token;
-    let refreshToken;
-    jwt.sign({ id: userId }, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: "7d",
-    });
+
     try {
-      token = jwt.sign(
-        { userId: newUser.id, email: newUser.email },
-        config.JWT_SECRET,
-        { expiresIn: "30m" }
-      );
-      refreshToken = jwt.sign(
-        { userId: newUser.id },
-        config.REFRESH_TOKEN_SECRET,
-        {
-          expiresIn: "7d",
-        }
-      );
+      token = jwt.sign({ userId, email: newUser.email }, config.JWT_SECRET, {
+        expiresIn: "30m",
+      });
     } catch (err) {
       const error = new HttpError(
         "Signing up failed, please try again later.",
@@ -127,12 +117,6 @@ const Signup = async (req, res, next) => {
       logger.error("Error in Token Generation: ", err);
       return next(error);
     }
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "Strict",
-    });
 
     res.status(201).json({ userId: newUser.id, email: newUser.email, token });
   } catch (error) {

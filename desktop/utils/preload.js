@@ -1,7 +1,12 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
+const allowedInvokeChannels = ["registerUser", "loginUser", "verifyUser"];
+
 contextBridge.exposeInMainWorld("api", {
-  send: (channel, data) => ipcRenderer.send(channel, data),
-  receive: (channel, callback) =>
-    ipcRenderer.on(channel, (event, ...args) => callback(...args)),
+  invoke: async (channel, data) => {
+    if (!allowedInvokeChannels.includes(channel)) {
+      throw new Error(`Blocked unauthorized invoke channel: ${channel}`);
+    }
+    return await ipcRenderer.invoke(channel, data);
+  },
 });

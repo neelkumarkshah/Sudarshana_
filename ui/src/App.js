@@ -19,29 +19,16 @@ const App = () => {
 
   useEffect(() => {
     const verifyUser = async () => {
-      if (token) {
-        try {
-          const response = await fetch(
-            `${process.env.REACT_APP_BACKEND_URL}/users/verifyUsers`,
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+      if (!token) return logout();
 
-          if (!response.ok) {
-            throw new Error("User verification failed!");
-          }
+      try {
+        const response = await window.api.invoke("verifyUser", { token });
 
-          const responseData = await response.json();
-          if (!responseData.userExists) {
-            logout();
-          }
-        } catch (err) {
+        if (!response.success || !response.userExists) {
           logout();
         }
+      } catch {
+        logout();
       }
     };
 

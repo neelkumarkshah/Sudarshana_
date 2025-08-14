@@ -65,31 +65,17 @@ const RegistrationForm = () => {
       const phoneNumber = data.phoneNumber.replace(/^\d{2}/, "");
       const modifiedData = { ...data, phoneNumber };
 
-      const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/users/signup`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(modifiedData),
-        }
-      );
+      const response = await window.api.invoke("registerUser", modifiedData);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (Array.isArray(errorData)) {
-          throw new Error(errorData.map((err) => err.message).join("\n"));
-        } else {
-          throw new Error(errorData.message || "Registration failed");
-        }
+      if (response.success) {
+        setSuccessMessage(response.message);
+        reset();
+        setTimeout(() => navigate("/"), 2000);
+      } else {
+        setError(response.message || "Registration failed");
       }
-
-      setSuccessMessage("Registration successful!");
-      reset();
-      setTimeout(() => navigate("/"), 2000);
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "An unexpected error occurred");
     } finally {
       setShowOverlay(false);
     }
