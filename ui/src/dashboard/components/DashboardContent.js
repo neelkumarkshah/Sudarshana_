@@ -114,48 +114,51 @@ const DashboardContent = ({ scanData, token }) => {
   };
 
   const handleDownload = async (scanId, applicationName, index) => {
-    setShowOverlay(true);
-    setIconState((prev) => ({ ...prev, [index]: "clicked" }));
-    setModalMessage("We are preparing your PDF report, please wait...");
+    try {
+      setShowOverlay(true);
+      setIconState((prev) => ({ ...prev, [index]: "clicked" }));
+      setModalMessage("We are preparing your PDF report, please wait...");
 
-    setTimeout(() => {
-      setModalMessage("PDF report is being downloaded...");
+      setTimeout(() => {
+        setModalMessage("PDF report is being downloaded...");
 
-      setTimeout(async () => {
-        try {
-          const response = await fetch(
-            `${process.env.REACT_APP_BACKEND_URL}/pentesting/downloadPdf/${scanId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-              method: "GET",
-            }
-          );
+        setTimeout(async () => {
+          try {
+            const response = await window.electron.ipcRenderer.invoke(
+              "downloadPDF",
+              {
+                scanId,
+                token,
+                applicationName,
+              }
+            );
 
-          if (!response.ok) {
-            throw new Error("Failed to download PDF");
+            if (!response.success) throw new Error(response.message);
+
+            const blob = new Blob(
+              [Uint8Array.from(atob(response.file), (c) => c.charCodeAt(0))],
+              { type: "application/pdf" }
+            );
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", response.filename);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            setIconState((prev) => ({ ...prev, [index]: "default" }));
+          } catch (error) {
+            setError(error.message || "An error occurred during PDF download.");
+          } finally {
+            setShowOverlay(false);
           }
-
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.setAttribute(
-            "download",
-            `${applicationName}_Security_Assessment_Report.pdf`
-          );
-          document.body.appendChild(link);
-          link.click();
-          link.parentNode.removeChild(link);
-          setIconState((prev) => ({ ...prev, [index]: "default" }));
-        } catch (error) {
-          setError(error.message || "An error occurred during PDF download.");
-        } finally {
-          setShowOverlay(false);
-        }
-      }, 1500);
-    }, 5000);
+        }, 1500);
+      }, 5000);
+    } catch (err) {
+      setError(err?.message || "Unexpected error occurred in download flow.");
+      setShowOverlay(false);
+    }
   };
 
   const formatDate = (date) => {

@@ -15,23 +15,16 @@ const Dashboard = () => {
     const fetchScanData = async () => {
       if (userId && token) {
         try {
-          const response = await fetch(
-            `${process.env.REACT_APP_BACKEND_URL}/users/scans/${userId}`,
-            {
-              headers: {
-                authorization: `Bearer ${token}`,
-              },
-              method: "GET",
-            }
-          );
+          const response = await window.api.invoke("fetchScan", {
+            token,
+            userId,
+          });
 
-          if (!response.ok) {
-            throw new Error("Failed to fetch scan data");
+          if (response.success) {
+            setScanData(response.data);
+          } else {
+            setErrors(response.message);
           }
-
-          const data = await response.json();
-          const ScanRecords = data.scanRecords || [];
-          setScanData(ScanRecords);
         } catch (error) {
           setErrors(error.message);
         }

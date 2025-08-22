@@ -152,9 +152,10 @@ const UploadPDF = async (req, res, next) => {
     scan.pdfFile = pdfFile.buffer;
     await scan.save();
 
-    res
-      .status(200)
-      .json({ success: true, message: "PDF uploaded successfully" });
+    return res.status(200).json({
+      success: true,
+      message: "PDF uploaded successfully",
+    });
   } catch (err) {
     console.error(`Error uploading PDF for scanId: ${scanId}`, err);
     return next(new HttpError("Error uploading PDF", 500));
@@ -171,7 +172,7 @@ const DownloadPDF = async (req, res, next) => {
       return next(new HttpError("PDF file not found.", 404));
     }
 
-    res.set({
+    res.setHeader({
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename=${scanRecord.applicationName}.pdf`,
     });
