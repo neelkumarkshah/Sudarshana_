@@ -1,6 +1,14 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-const allowedInvokeChannels = ["registerUser", "loginUser", "verifyUser"];
+const allowedInvokeChannels = [
+  "registerUser",
+  "verifyUser",
+  "loginUser",
+  "fetchScan",
+  "startScan",
+  "uploadPDF",
+  "downloadPDF",
+];
 
 contextBridge.exposeInMainWorld("api", {
   invoke: async (channel, data) => {

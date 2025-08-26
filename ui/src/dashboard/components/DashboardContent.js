@@ -124,14 +124,11 @@ const DashboardContent = ({ scanData, token }) => {
 
         setTimeout(async () => {
           try {
-            const response = await window.electron.ipcRenderer.invoke(
-              "downloadPDF",
-              {
-                scanId,
-                token,
-                applicationName,
-              }
-            );
+            const response = await window.api.invoke("downloadPDF", {
+              scanId,
+              token,
+              applicationName,
+            });
 
             if (!response.success) throw new Error(response.message);
 
@@ -143,7 +140,7 @@ const DashboardContent = ({ scanData, token }) => {
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", response.filename);
+            link.setAttribute("download", response.pdfName);
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);

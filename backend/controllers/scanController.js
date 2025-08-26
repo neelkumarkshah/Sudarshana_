@@ -172,10 +172,11 @@ const DownloadPDF = async (req, res, next) => {
       return next(new HttpError("PDF file not found.", 404));
     }
 
-    res.setHeader({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=${scanRecord.applicationName}.pdf`,
-    });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${scanRecord.applicationName}.pdf"`
+    );
 
     res.send(scanRecord.pdfFile);
   } catch (err) {
