@@ -34,6 +34,6 @@ router.post(
 
 router.get("/downloadPdf/:scanId", isAuth, scanController.DownloadPDF);
 
-router.post("/deleteScan", isAuth, scanController.DeleteScan);
+router.delete("/deleteScans", isAuth, scanController.DeleteScans);
 
 module.exports = router;

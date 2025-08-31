@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Alert } from "react-bootstrap";
 
 import DashboardContent from "../components/DashboardContent";
@@ -11,28 +11,29 @@ const Dashboard = () => {
 
   const { token, userId } = useAuth();
 
-  useEffect(() => {
-    const fetchScanData = async () => {
-      if (userId && token) {
-        try {
-          const response = await window.api.invoke("fetchScan", {
-            token,
-            userId,
-          });
+  const fetchScanData = useCallback(async () => {
+    if (userId && token) {
+      try {
+        const response = await window.api.invoke("fetchScan", {
+          token,
+          userId,
+        });
 
-          if (response.success) {
-            setScanData(response.data);
-          } else {
-            setErrors(response.message);
-          }
-        } catch (error) {
-          setErrors(error.message);
+        if (response.success) {
+          setScanData(response.data);
+          setErrors("");
+        } else {
+          setErrors(response.message);
         }
+      } catch (error) {
+        setErrors(error.message);
       }
-    };
-
-    fetchScanData();
+    }
   }, [userId, token]);
+
+  useEffect(() => {
+    fetchScanData();
+  }, [fetchScanData]);
 
   return (
     <div className={classes.dashboardPage}>
@@ -45,7 +46,11 @@ const Dashboard = () => {
           )}
         </Col>
         <Col xs={12} md={12} lg={12}>
-          <DashboardContent scanData={scanData} token={token} />
+          <DashboardContent
+            scanData={scanData}
+            token={token}
+            refreshScans={fetchScanData}
+          />
         </Col>
       </Row>
     </div>

@@ -44,6 +44,7 @@ const userSchema = new mongoose.Schema({
   },
   scans: [
     { type: mongoose.Schema.Types.ObjectId, ref: "Scan", required: true },
+    { versionKey: false },
   ],
 });
 

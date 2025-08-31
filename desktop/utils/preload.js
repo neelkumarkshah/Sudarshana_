@@ -8,6 +8,7 @@ const allowedInvokeChannels = [
   "startScan",
   "uploadPDF",
   "downloadPDF",
+  "deleteScan",
 ];
 
 contextBridge.exposeInMainWorld("api", {

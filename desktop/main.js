@@ -9,12 +9,10 @@ const {
 const path = require("node:path");
 const isDev = require("electron-is-dev");
 const { autoUpdater } = require("electron-updater");
-const dotenv = require("dotenv");
 const fetch = require("node-fetch");
 const FormData = require("form-data");
-const fs = require("fs");
 
-dotenv.config();
+const API_BASE_URL = require("./utils/apiConfig");
 
 let mainWindow;
 
@@ -145,7 +143,7 @@ const setupMenu = () => {
 const setupIPC = () => {
   ipcMain.handle("registerUser", async (event, data) => {
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/users/signup`, {
+      const response = await fetch(`${API_BASE_URL}/users/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -171,13 +169,10 @@ const setupIPC = () => {
       const token = data?.token;
       if (!token) throw new Error("Token is required");
 
-      const response = await fetch(
-        `${process.env.BACKEND_URL}/users/verifyUsers`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/users/verifyUsers`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const resData = await response.json();
 
@@ -196,7 +191,7 @@ const setupIPC = () => {
 
   ipcMain.handle("loginUser", async (event, data) => {
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/users/login`, {
+      const response = await fetch(`${API_BASE_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -217,13 +212,10 @@ const setupIPC = () => {
       if (!token) throw new Error("Token is required");
       if (!userId) throw new Error("UserId is required");
 
-      const response = await fetch(
-        `${process.env.BACKEND_URL}/users/scans/${userId}`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/users/scans/${userId}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const resData = await response.json();
 
@@ -245,17 +237,14 @@ const setupIPC = () => {
         }
         if (!token) throw new Error("Authorization token is required");
 
-        const response = await fetch(
-          `${process.env.BACKEND_URL}/pentesting/startScan`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ url, applicationName, scanType, userId }),
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/pentesting/startScan`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ url, applicationName, scanType, userId }),
+        });
 
         const resData = await response.json();
 
@@ -286,20 +275,26 @@ const setupIPC = () => {
           contentType: "application/pdf",
         });
 
-        const response = await fetch(
-          `${process.env.BACKEND_URL}/pentesting/uploadPdf`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/pentesting/uploadPdf`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
 
         const resData = await response.json();
 
-        if (!response.ok) throw new Error(resData.message || "Upload failed");
+        if (!response.ok) {
+          let errMessage = "Upload failed";
+          try {
+            errMessage = resData.message || errMessage;
+          } catch {
+            const errText = await response.text();
+            if (errText) errMessage = errText;
+          }
+          throw new Error(errMessage);
+        }
 
         return { success: true, ...resData };
       } catch (error) {
@@ -316,7 +311,7 @@ const setupIPC = () => {
         if (!token) throw new Error("Token is required");
 
         const response = await fetch(
-          `${process.env.BACKEND_URL}/pentesting/downloadPdf/${scanId}`,
+          `${API_BASE_URL}/pentesting/downloadPdf/${scanId}`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
@@ -324,8 +319,15 @@ const setupIPC = () => {
         );
 
         if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(errText || "Failed to download PDF");
+          let errMessage = "Failed to download PDF";
+          try {
+            const resData = await response.json();
+            errMessage = resData.message || errMessage;
+          } catch {
+            const errText = await response.text();
+            if (errText) errMessage = errText;
+          }
+          throw new Error(errMessage);
         }
 
         const buffer = Buffer.from(await response.arrayBuffer());
@@ -340,6 +342,42 @@ const setupIPC = () => {
       }
     }
   );
+
+  ipcMain.handle("deleteScan", async (event, { scanIds, token }) => {
+    try {
+      if (!scanIds || scanIds.length === 0)
+        throw new Error("Scan ID(s) required");
+      if (!token) throw new Error("Token is required");
+
+      const response = await fetch(`${API_BASE_URL}/pentesting/deleteScans`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ scanIds }), // ✅ send array
+      });
+
+      let resData = {};
+      try {
+        resData = await response.json();
+      } catch {
+        resData = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(resData.message || "Failed to delete scans");
+      }
+
+      return {
+        success: true,
+        message: resData.message,
+        deletedIds: resData.deletedIds || [],
+      };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  });
 };
 
 app.whenReady().then(() => {

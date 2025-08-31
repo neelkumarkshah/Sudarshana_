@@ -70,3 +70,15 @@
   border-color: #1c3144 !important;
   color: #ffffff !important;
 }
+
+.deleteButton:hover {
+  background-color: #ffffff;
+  border: 0.01rem solid #dc3545;
+  color: #dc3545;
+}
+
+.deleteButton:active {
+  background-color: #dc3545 !important;
+  border: 0.01rem solid #dc3545 !important;
+  color: #ffffff !important;
+}

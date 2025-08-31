@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Alert, Pagination } from "react-bootstrap";
+import { Card, Table, Alert, Pagination, Button, Form } from "react-bootstrap";
 import DashboardTableLoader from "./DashboardTableLoader";
 import ModalOverlay from "../../shared/components/uiElements/modalOverlay/ModalOverlay";
 import pdfIconOn from "../../shared/assets/images/pdfIconOn.png";
@@ -79,15 +79,16 @@ const cssOverride = `
   }
 ;`;
 
-const DashboardContent = ({ scanData, token }) => {
+const DashboardContent = ({ scanData, token, refreshScans }) => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [modalMessage, setModalMessage] = useState(
     "We are preparing your PDF report, please wait..."
   );
-  const [error, setError] = useState("");
+  const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(true);
   const [iconState, setIconState] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedScans, setSelectedScans] = useState([]);
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -101,15 +102,42 @@ const DashboardContent = ({ scanData, token }) => {
     setCurrentPage(pageNumber);
   };
 
-  const handleHover = (index) => {
-    if (!iconState[index] || iconState[index] === "default") {
-      setIconState((prev) => ({ ...prev, [index]: "hovered" }));
-    }
+  const handleCheckboxChange = (scanId) => {
+    setSelectedScans((prev) =>
+      prev.includes(scanId)
+        ? prev.filter((id) => id !== scanId)
+        : [...prev, scanId]
+    );
   };
 
-  const handleLeave = (index) => {
-    if (!iconState[index] || iconState[index] === "hovered") {
-      setIconState((prev) => ({ ...prev, [index]: "default" }));
+  const handleDelete = async () => {
+    if (selectedScans.length === 0) return;
+
+    try {
+      const response = await window.api.invoke("deleteScan", {
+        scanIds: selectedScans,
+        token,
+      });
+
+      if (response.success) {
+        setSelectedScans([]);
+        setNotification({
+          type: "success",
+          text: response.message,
+        });
+
+        await refreshScans();
+      } else {
+        setNotification({
+          type: "danger",
+          text: response.message || "Some scans could not be deleted.",
+        });
+      }
+    } catch (err) {
+      setNotification({
+        type: "danger",
+        text: err.message || "Error deleting scans.",
+      });
     }
   };
 
@@ -146,14 +174,20 @@ const DashboardContent = ({ scanData, token }) => {
             link.parentNode.removeChild(link);
             setIconState((prev) => ({ ...prev, [index]: "default" }));
           } catch (error) {
-            setError(error.message || "An error occurred during PDF download.");
+            setNotification({
+              type: "danger",
+              text: error.message || "An error occurred during PDF download.",
+            });
           } finally {
             setShowOverlay(false);
           }
         }, 1500);
       }, 5000);
     } catch (err) {
-      setError(err?.message || "Unexpected error occurred in download flow.");
+      setNotification({
+        type: "danger",
+        text: err?.message || "Unexpected error occurred in download flow.",
+      });
       setShowOverlay(false);
     }
   };
@@ -168,14 +202,16 @@ const DashboardContent = ({ scanData, token }) => {
       second: "2-digit",
       hour12: true,
     };
-
     const dateObj = new Date(date);
-
     const formattedDate = dateObj.toLocaleString("en-IN", options);
-    const dateOfScan =
-      formattedDate.replace(/am|pm/i, (match) => match.toUpperCase()) + " IST";
+    return (
+      formattedDate.replace(/am|pm/i, (match) => match.toUpperCase()) + " IST"
+    );
+  };
 
-    return dateOfScan;
+  const trimText = (text, length = 15) => {
+    if (!text) return "";
+    return text.length > length ? `${text.slice(0, length)}...` : text;
   };
 
   const totalPages = Math.ceil(scanData.length / itemsPerPage);
@@ -191,37 +227,60 @@ const DashboardContent = ({ scanData, token }) => {
       ) : scanData && scanData.length > 0 ? (
         <Card className={classes.dashboardCard}>
           <Card.Body>
+            <div className="d-flex justify-content-between mb-3">
+              <h5>Scan Records</h5>
+              <Button
+                variant="danger"
+                disabled={selectedScans.length === 0}
+                onClick={handleDelete}
+                className={classes.deleteButton}
+              >
+                Delete Scan
+              </Button>
+            </div>
             <div className="table-responsive">
               <Table>
                 <colgroup>
+                  <col style={{ width: "8%" }} />
+                  <col style={{ width: "12%" }} />
+                  <col style={{ width: "14%" }} />
+                  <col style={{ width: "14%" }} />
+                  <col style={{ width: "20%" }} />
                   <col style={{ width: "10%" }} />
-                  <col style={{ width: "16%" }} />
                   <col style={{ width: "14%" }} />
-                  <col style={{ width: "22%" }} />
-                  <col style={{ width: "10%" }} />
-                  <col style={{ width: "14%" }} />
-                  <col style={{ width: "14%" }} />
+                  <col style={{ width: "12%" }} />
                 </colgroup>
                 <thead>
                   <tr>
+                    <th>Select</th>
                     <th>ID</th>
-                    <th>Application Name</th>
+                    <th>App Name</th>
                     <th>Scan Type</th>
                     <th>Targeted URL</th>
                     <th>Total Issues</th>
                     <th>Date</th>
-                    <th>PDF Report</th>
+                    <th>Report</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentData.map((scan, index) => (
                     <tr key={scan._id}>
+                      <td className="text-center align-middle">
+                        <Form.Check
+                          type="checkbox"
+                          id={`scan-checkbox-${scan._id}`}
+                          checked={selectedScans.includes(scan._id)}
+                          onChange={() => handleCheckboxChange(scan._id)}
+                          label=""
+                          className="d-inline-block"
+                        />
+                      </td>
                       <td>{`#${scan._id.slice(0, 4)}...${scan._id.slice(
                         -4
                       )}`}</td>
-                      <td>{scan.applicationName}</td>
+                      <td>{trimText(scan.applicationName, 18)}</td>
                       <td>{scan.scanType}</td>
-                      <td>{scan.targetedUrl}</td>
+                      <td>{trimText(scan.targetedUrl, 25)}</td>
                       <td>{scan.issues.length}</td>
                       <td>{formatDate(scan.timestamp)}</td>
                       <td>
@@ -235,8 +294,18 @@ const DashboardContent = ({ scanData, token }) => {
                           }
                           alt="PDF Icon"
                           className={classes.pdfIcon}
-                          onMouseEnter={() => handleHover(index)}
-                          onMouseLeave={() => handleLeave(index)}
+                          onMouseEnter={() =>
+                            setIconState((prev) => ({
+                              ...prev,
+                              [index]: "hovered",
+                            }))
+                          }
+                          onMouseLeave={() =>
+                            setIconState((prev) => ({
+                              ...prev,
+                              [index]: "default",
+                            }))
+                          }
                           onClick={() =>
                             handleDownload(
                               scan._id,
@@ -287,7 +356,13 @@ const DashboardContent = ({ scanData, token }) => {
           </Alert>
         </Card>
       )}
-      {error && <Alert variant="danger">{error.message || error}</Alert>}
+
+      {notification && (
+        <Alert variant={notification.type} className="mt-4">
+          {notification.text}
+        </Alert>
+      )}
+
       <ModalOverlay
         show={showOverlay}
         onHide={() => setShowOverlay(false)}

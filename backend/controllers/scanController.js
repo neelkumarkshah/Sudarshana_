@@ -185,32 +185,37 @@ const DownloadPDF = async (req, res, next) => {
   }
 };
 
-const DeleteScan = async (req, res, next) => {
-  const { scanId, userId } = req.params;
+const DeleteScans = async (req, res, next) => {
+  const { scanIds } = req.body;
+  const userId = req.userData.userId;
 
   try {
-    const scan = await Scan.findById(scanId);
-
-    if (!scan) {
-      logger.warn(`Scan not found with scanId: ${scanId}`);
-      return next(new HttpError("Scan not found", 404));
+    if (!Array.isArray(scanIds) || scanIds.length === 0) {
+      return next(new HttpError("No scan IDs provided", 400));
     }
 
-    if (scan.userId.toString() !== userId) {
-      logger.warn(
-        `Unauthorized deletion attempt for scanId: ${scanId} by userId: ${userId}`
-      );
-      return next(new HttpError("Unauthorized", 403));
+    const scans = await Scan.find({ _id: { $in: scanIds }, userId });
+
+    if (scans.length === 0) {
+      return next(new HttpError("No matching scans found for this user", 404));
     }
 
-    await User.updateOne({ _id: userId }, { $pull: { scans: scanId } });
+    const foundIds = scans.map((s) => s._id.toString());
 
-    await Scan.findByIdAndDelete(scanId);
+    await User.updateOne(
+      { _id: userId },
+      { $pull: { scans: { $in: foundIds } } }
+    );
 
-    res.status(200).json({ message: "Scan deleted successfully" });
+    await Scan.deleteMany({ _id: { $in: foundIds }, userId });
+
+    return res.status(200).json({
+      message: `${foundIds.length} scan(s) deleted successfully`,
+      deletedIds: foundIds,
+    });
   } catch (err) {
-    logger.error(`Error deleting scan with scanId: ${scanId}`, err);
-    return next(new HttpError(err, 500));
+    logger.error(`Error deleting scans:`, err);
+    return next(new HttpError("Error deleting scans", 500));
   }
 };
 
@@ -218,5 +223,5 @@ module.exports = {
   StartScan,
   UploadPDF,
   DownloadPDF,
-  DeleteScan,
+  DeleteScans,
 };
