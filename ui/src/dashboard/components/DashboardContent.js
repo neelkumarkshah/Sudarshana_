@@ -98,6 +98,15 @@ const DashboardContent = ({ scanData, token, refreshScans }) => {
     return () => clearTimeout(timer);
   }, [scanData]);
 
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
@@ -111,7 +120,13 @@ const DashboardContent = ({ scanData, token, refreshScans }) => {
   };
 
   const handleDelete = async () => {
-    if (selectedScans.length === 0) return;
+    if (selectedScans.length === 0) {
+      setNotification({
+        type: "warning",
+        text: "Please select scans to delete.",
+      });
+      return;
+    }
 
     try {
       const response = await window.api.invoke("deleteScan", {
@@ -119,24 +134,23 @@ const DashboardContent = ({ scanData, token, refreshScans }) => {
         token,
       });
 
-      if (response.success) {
+      if (response?.success) {
         setSelectedScans([]);
         setNotification({
           type: "success",
-          text: response.message,
+          text: response?.message || "Scans deleted successfully.",
         });
-
         await refreshScans();
       } else {
         setNotification({
           type: "danger",
-          text: response.message || "Some scans could not be deleted.",
+          text: response?.message || "Some scans could not be deleted.",
         });
       }
     } catch (err) {
       setNotification({
         type: "danger",
-        text: err.message || "Error deleting scans.",
+        text: err?.message || "Unexpected error occurred while deleting scans.",
       });
     }
   };
@@ -158,7 +172,9 @@ const DashboardContent = ({ scanData, token, refreshScans }) => {
               applicationName,
             });
 
-            if (!response.success) throw new Error(response.message);
+            if (!response?.success) {
+              throw new Error(response?.message || "Failed to generate PDF.");
+            }
 
             const blob = new Blob(
               [Uint8Array.from(atob(response.file), (c) => c.charCodeAt(0))],
@@ -173,12 +189,17 @@ const DashboardContent = ({ scanData, token, refreshScans }) => {
             link.click();
             link.parentNode.removeChild(link);
             setIconState((prev) => ({ ...prev, [index]: "default" }));
+            setNotification({
+              type: "success",
+              text: "PDF report downloaded successfully.",
+            });
           } catch (error) {
             setNotification({
               type: "danger",
               text: error.message || "An error occurred during PDF download.",
             });
           } finally {
+            setIconState((prev) => ({ ...prev, [index]: "default" }));
             setShowOverlay(false);
           }
         }, 1500);
@@ -351,7 +372,10 @@ const DashboardContent = ({ scanData, token, refreshScans }) => {
         </Card>
       ) : (
         <Card className={classes.dashboardCard}>
-          <Alert variant="info" className={`text-center ${classes.alert}`}>
+          <Alert
+            variant="info"
+            className={`text-center text-info ${classes.alert}`}
+          >
             No data available.
           </Alert>
         </Card>

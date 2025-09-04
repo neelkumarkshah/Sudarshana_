@@ -46,6 +46,7 @@
     "electron": "^36.4.0",
     "electron-updater": "^6.6.2",
     "electron-window-state": "^5.0.3",
+    "fetch-cookie": "^3.1.0",
     "formik": "^2.4.6",
     "html2canvas": "^1.4.1",
     "intl-tel-input": "^25.3.1",
@@ -53,7 +54,8 @@
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "mongodb": "^6.17.0",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "tough-cookie": "^6.0.0"
   },
   "browserslist": {
     "production": [

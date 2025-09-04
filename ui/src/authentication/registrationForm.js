@@ -1,4 +1,4 @@
-import React, { useState, lazy, startTransition } from "react";
+import React, { useState, lazy, startTransition, useEffect } from "react";
 import "react-phone-input-2/lib/style.css";
 import { Form, Row, Col, Card, FloatingLabel, Alert } from "react-bootstrap";
 import { useForm, Controller } from "react-hook-form";
@@ -49,9 +49,17 @@ const RegistrationForm = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [showOverlay, setShowOverlay] = useState(false);
-  const [modalMessage, setModalMessage] = useState(
-    "Validating and Verifying your details, please wait..."
-  );
+  const [modalMessage, setModalMessage] = useState("");
+
+  useEffect(() => {
+    if (error || successMessage) {
+      const timer = setTimeout(() => {
+        setError("");
+        setSuccessMessage("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, successMessage]);
 
   const onSubmit = async (data) => {
     setError("");
@@ -60,22 +68,28 @@ const RegistrationForm = () => {
     setModalMessage("Validating and Verifying your details, please wait...");
 
     try {
-      await sleep(5000);
+      await sleep(1500);
 
       const phoneNumber = data.phoneNumber.replace(/^\d{2}/, "");
       const modifiedData = { ...data, phoneNumber };
 
       const response = await window.api.invoke("registerUser", modifiedData);
 
-      if (response.success) {
-        setSuccessMessage(response.message);
+      if (response?.success) {
+        setSuccessMessage(
+          response.message || "Account created successfully! Redirecting..."
+        );
         reset();
-        setTimeout(() => navigate("/"), 2000);
+        setTimeout(() => {
+          startTransition(() => navigate("/"));
+        }, 2000);
       } else {
-        setError(response.message || "Registration failed");
+        setError(response?.message || "Registration failed. Please try again.");
       }
     } catch (err) {
-      setError(err?.message || "An unexpected error occurred");
+      setError(
+        err?.message || "An unexpected error occurred. Please try again later."
+      );
     } finally {
       setShowOverlay(false);
     }
@@ -95,36 +109,8 @@ const RegistrationForm = () => {
       borderRadius: "0.375rem",
       border: "1px solid #dee2e6",
     },
-    dropdown: {
-      fontFamily: "Inter",
-      fontSize: "1rem",
-    },
-    modalContent: {
-      backgroundColor: "#1c3144",
-      border: "none",
-      color: "#f2f7f5",
-      borderRadius: "6px",
-      padding: "20px",
-    },
-    spinner: {
-      color: "#f2f7f5",
-      borderWidth: "0.15rem",
-    },
+    dropdown: { fontFamily: "Inter", fontSize: "1rem" },
   };
-
-  const cssOverride = `
-  .react-tel-input .country-list .search-emoji {
-    font-size: 0 !important;
-  }
-
-  .react-tel-input .country-list .search-box {
-    margin-left: 0 !important;
-    width: 95% !important;
-  }
-    
-  .form-floating>label{
-    z-index: 0 !important;
-  }`;
 
   return (
     <div className={classes.authForm}>
@@ -146,9 +132,8 @@ const RegistrationForm = () => {
         </Col>
         <Col sm={12} md={12} lg={5}>
           <CardLayout>
-            <style>{cssOverride}</style>
             <Card.Body>
-              <Form onSubmit={handleSubmit(onSubmit)}>
+              <Form onSubmit={handleSubmit(onSubmit)} noValidate>
                 <Row>
                   <Col md={12}>
                     <FloatingLabel
@@ -196,17 +181,7 @@ const RegistrationForm = () => {
                             country={"in"}
                             value={field.value}
                             onChange={field.onChange}
-                            enableSearch={true}
-                            dropdownStyle={styles.dropdown}
-                            searchPlaceholder="Search..."
-                            inputProps={{
-                              name: "phoneNumber",
-                              required: true,
-                              autoFocus: false,
-                            }}
-                            containerStyle={{
-                              width: "100%",
-                            }}
+                            enableSearch
                             inputStyle={styles.input}
                           />
                         )}
@@ -256,7 +231,7 @@ const RegistrationForm = () => {
                   </Col>
                 </Row>
                 <Row>
-                  <Col sm={12} md={12} lg={12}>
+                  <Col sm={12}>
                     <span>Already have an account? </span>
                     <Link
                       to="/"
@@ -266,7 +241,7 @@ const RegistrationForm = () => {
                       Login
                     </Link>
                   </Col>
-                  <Col sm={12} md={12} lg={12} className="mt-3 mb-2">
+                  <Col sm={12} className="mt-3 mb-2">
                     {error && (
                       <Alert variant="danger" className="text-danger">
                         {error}

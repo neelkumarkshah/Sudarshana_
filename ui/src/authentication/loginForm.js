@@ -1,4 +1,4 @@
-import React, { useState, useContext, startTransition } from "react";
+import React, { useState, useContext, startTransition, useEffect } from "react";
 import { Form, Row, Col, Card, FloatingLabel, Alert } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -25,6 +25,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const LoginForm = () => {
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
+
   const {
     register,
     handleSubmit,
@@ -33,30 +34,47 @@ const LoginForm = () => {
     resolver: yupResolver(loginSchema),
   });
 
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [showOverlay, setShowOverlay] = useState(false);
-  const [modalMessage, setModalMessage] = useState(
-    "Fetching and Verifying your details, please wait..."
-  );
+  const [modalMessage, setModalMessage] = useState("");
+
+  useEffect(() => {
+    if (error || successMessage) {
+      const timer = setTimeout(() => {
+        setError("");
+        setSuccessMessage("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, successMessage]);
 
   const onSubmit = async (data) => {
-    setError(null);
+    setError("");
+    setSuccessMessage("");
     setShowOverlay(true);
     setModalMessage("Fetching and Verifying your details, please wait...");
 
     try {
-      await sleep(3000);
+      await sleep(1500);
 
       const response = await window.api.invoke("loginUser", data);
 
-      if (response.success) {
-        auth.login(response.data.userId, response.data.token);
-        navigate("/dashboard");
+      if (response?.success) {
+        setSuccessMessage("Login successful! Redirecting...");
+        auth.login(response.data.userId);
+        setTimeout(() => {
+          startTransition(() => navigate("/dashboard"));
+        }, 2000);
       } else {
-        setError(response.message || "Login failed");
+        setError(
+          response?.message || "Login failed. Please check credentials."
+        );
       }
-    } catch (error) {
-      setError(error?.message || "An unexpected error occurred");
+    } catch (err) {
+      setError(
+        err?.message || "An unexpected error occurred. Please try again later."
+      );
     } finally {
       setShowOverlay(false);
     }
@@ -75,9 +93,9 @@ const LoginForm = () => {
         <Col sm={12} md={12} lg={5} className="order-3 order-lg-1">
           <CardLayout>
             <Card.Body>
-              <Form onSubmit={handleSubmit(onSubmit)}>
+              <Form onSubmit={handleSubmit(onSubmit)} noValidate>
                 <Row>
-                  <Col sm={12} md={12} lg={12}>
+                  <Col sm={12}>
                     <FloatingLabel
                       controlId="floatingEmail"
                       label="Email"
@@ -94,7 +112,7 @@ const LoginForm = () => {
                       </Form.Control.Feedback>
                     </FloatingLabel>
                   </Col>
-                  <Col sm={12} md={12} lg={12}>
+                  <Col sm={12}>
                     <FloatingLabel
                       controlId="floatingPassword"
                       label="Password"
@@ -113,7 +131,7 @@ const LoginForm = () => {
                   </Col>
                 </Row>
                 <Row className="mt-3 mb-3">
-                  <Col sm={12} md={12} lg={12}>
+                  <Col sm={12}>
                     <span>Don&apos;t have an account? </span>
                     <Link
                       to="/signup"
@@ -123,10 +141,15 @@ const LoginForm = () => {
                       Sign up
                     </Link>
                   </Col>
-                  <Col sm={12} md={12} lg={12} className="mt-3">
+                  <Col sm={12} className="mt-3">
                     {error && (
                       <Alert variant="danger" className="text-danger">
                         {error}
+                      </Alert>
+                    )}
+                    {successMessage && (
+                      <Alert variant="success" className="text-success">
+                        {successMessage}
                       </Alert>
                     )}
                   </Col>

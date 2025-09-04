@@ -11,14 +11,14 @@ const logger = require("../configuration/logger");
 
 const GetUsers = async (req, res, next) => {
   try {
-    const userId = req.userData.userId;
-    const existingUser = await User.findById(userId);
+    const user = await User.findById(req.userData.userId).lean().exec();
+    if (!user) return res.status(404).json({ userExists: false });
 
-    if (!existingUser) {
-      return next(new HttpError("User does not exist!", 404));
-    }
-
-    res.status(200).json({ userExists: true });
+    return res.status(200).json({
+      userExists: true,
+      userId: user.id,
+      email: user.email,
+    });
   } catch (err) {
     logger.error("Error in GetUsers: ", err);
     next(new HttpError("User verification failed!", 500));
@@ -27,19 +27,15 @@ const GetUsers = async (req, res, next) => {
 
 const GetUserRecords = async (req, res, next) => {
   try {
-    const userId = req.userData.userId;
+    const authedUserId = req.userData.userId;
+    const requestedUserId = req.params.userId;
 
-    const userScanRecords = await Scan.find({ userId: userId });
-
-    if (!userScanRecords || userScanRecords.length === 0) {
-      return res.status(200).json({
-        scanRecords: [],
-      });
+    if (requestedUserId !== authedUserId) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
-    res.status(200).json({
-      scanRecords: userScanRecords,
-    });
+    const scans = await Scan.find({ userId: authedUserId }).lean().exec();
+    return res.status(200).json({ scanRecords: scans || [] });
   } catch (err) {
     logger.error("Error fetching user records: ", err);
     next(new HttpError("Fetching user records failed!", 500));
@@ -49,34 +45,16 @@ const GetUserRecords = async (req, res, next) => {
 const Signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const errorMessages = errors.array().map((error) => ({
-      param: error.param,
-      message: error.msg,
-    }));
-
-    return next(new HttpError(JSON.stringify(errorMessages), 422));
+    return next(new HttpError("Validation failed", 422));
   }
 
   const { name, email, password, phoneNumber } = req.body;
 
   try {
-    let existingUser = await User.findOne({ email: email });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return next(new HttpError("User already exists", 422));
 
-    if (existingUser) {
-      return next(new HttpError(`User already exists with this email`, 422));
-    }
-
-    let hashedPassword;
-    try {
-      hashedPassword = await bcrypt.hash(password, 12);
-    } catch (err) {
-      const error = new HttpError(
-        "Could not create user, please try again.",
-        500
-      );
-      logger.error("Error in Password Hashing: ", err);
-      return next(error);
-    }
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const profileImage = req.file ? req.file.path : null;
 
@@ -90,41 +68,14 @@ const Signup = async (req, res, next) => {
       scans: [],
     });
 
-    try {
-      await newUser.save();
-    } catch (err) {
-      const error = new HttpError(
-        "Signing up failed, please try again later.",
-        500
-      );
-      logger.error("Error in User Creation: ", err);
-      return next(error);
-    }
+    await newUser.save();
 
-    const userId = newUser.id;
+    req.session.userId = newUser.id;
 
-    let token;
-
-    try {
-      token = jwt.sign({ userId, email: newUser.email }, config.JWT_SECRET, {
-        expiresIn: "30m",
-      });
-    } catch (err) {
-      const error = new HttpError(
-        "Signing up failed, please try again later.",
-        500
-      );
-      logger.error("Error in Token Generation: ", err);
-      return next(error);
-    }
-
-    res.status(201).json({ userId: newUser.id, email: newUser.email, token });
+    res.status(201).json({ userId: newUser.id, email: newUser.email });
   } catch (error) {
-    logger.error("Unexpected error in signup process: ", error);
-    res
-      .status(500)
-      .json({ message: "Internal Server Error", error: error.message });
-    next(error);
+    logger.error("Unexpected error in signup: ", error);
+    next(new HttpError("Signup failed", 500));
   }
 };
 
@@ -147,7 +98,7 @@ const Login = async (req, res, next) => {
 
   if (!existingUser) {
     const error = new HttpError(
-      "User does not exist. Please sign up first..",
+      "User does not exist. Please sign up first...",
       403
     );
     return next(error);
@@ -175,28 +126,38 @@ const Login = async (req, res, next) => {
     return next(error);
   }
 
-  let token;
   try {
-    token = jwt.sign(
-      { userId: existingUser.id, email: existingUser.email },
-      config.JWT_SECRET,
-      { expiresIn: "30m" }
-    );
+    req.session.userId = existingUser.id;
   } catch (err) {
     const error = new HttpError(
       "Logging in failed, please try again later.",
       500
     );
-    logger.error("Error in JWT Token: ", err);
+    logger.error("Error: ", err);
 
     return next(error);
   }
 
-  res.json({
-    userId: existingUser.id,
-    email: existingUser.email,
-    token: token,
-  });
+  res.status(200).json({ userId: existingUser.id, email: existingUser.email });
+};
+
+const Logout = (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) return res.status(500).json({ message: "Error logging out" });
+
+      res.clearCookie("chakra", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "strict",
+        path: "/",
+      });
+
+      return res.status(200).json({ message: "Logged out successfully" });
+    });
+  } catch {
+    return res.status(500).json({ message: "Error logging out" });
+  }
 };
 
 module.exports = {
@@ -204,4 +165,5 @@ module.exports = {
   GetUserRecords,
   Signup,
   Login,
+  Logout,
 };

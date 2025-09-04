@@ -13,13 +13,7 @@ router.post(
   "/signup",
   fileStorage.single("profileImage"),
   [
-    body("name")
-      .trim()
-      .not()
-      .isEmpty()
-      .withMessage("Name is required")
-      .isString()
-      .withMessage("Name must be a string"),
+    body("name").trim().not().isEmpty().withMessage("Name is required"),
     body("email")
       .isEmail()
       .withMessage("Invalid email address")
@@ -30,7 +24,7 @@ router.post(
       .withMessage("Password must be between 6 and 12 characters long")
       .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+{};:,<.>])/)
       .withMessage(
-        "Password must contain at least one lowercase letter, one uppercase letter, one special character, and one numeric digit"
+        "Password must contain lowercase, uppercase, digit, and special char"
       ),
     body("phoneNumber")
       .isMobilePhone("any", { strictMode: false })
@@ -40,6 +34,8 @@ router.post(
 );
 
 router.post("/login", userController.Login);
+
+router.post("/logout", userController.Logout);
 
 router.get("/scans/:userId", isAuth, userController.GetUserRecords);
 

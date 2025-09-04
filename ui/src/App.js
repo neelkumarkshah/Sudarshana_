@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -15,34 +15,11 @@ import { useAuth } from "./shared/hooks/auth-hook";
 import Layout from "./shared/components/layout/Layout";
 
 const App = () => {
-  const { token, login, logout, userId } = useAuth();
-
-  useEffect(() => {
-    const verifyUser = async () => {
-      if (!token) return logout();
-
-      try {
-        const response = await window.api.invoke("verifyUser", { token });
-
-        if (!response.success || !response.userExists) {
-          logout();
-        }
-      } catch {
-        logout();
-      }
-    };
-
-    verifyUser();
-
-    const intervalId = setInterval(verifyUser, 60000);
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [token, logout]);
+  const { isLoggedIn, userId, login, logout } = useAuth();
 
   let routes;
 
-  if (token) {
+  if (isLoggedIn) {
     routes = (
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" />} />
@@ -66,11 +43,10 @@ const App = () => {
   return (
     <AuthContext.Provider
       value={{
-        isLoggedIn: !!token,
-        token: token,
-        userId: userId,
-        login: login,
-        logout: logout,
+        isLoggedIn,
+        userId,
+        login,
+        logout,
       }}
     >
       <Router>{routes}</Router>

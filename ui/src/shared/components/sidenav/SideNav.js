@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useCallback, startTransition } from "react";
 import { Button } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,15 +12,22 @@ import brandLogo from "../../../shared/assets/images/sudarshanaLogo.png";
 import classes from "./SideNav.module.css";
 import { AuthContext } from "../../context/auth-context";
 
-const SideNav = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const SideNav = () => {
   const auth = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    auth.logout();
-    navigate("/");
-  };
+  const handleLogout = useCallback(async () => {
+    try {
+      await window.api.invoke("logoutUser");
+    } catch (err) {
+      console.error("Logout error:", err);
+      alert("Something went wrong while logging out. Clearing session.");
+    } finally {
+      auth.logout();
+      startTransition(() => navigate("/"));
+    }
+  }, [auth, navigate]);
 
   const isActive = (path) => (location.pathname === path ? classes.active : "");
 

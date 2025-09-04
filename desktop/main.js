@@ -11,10 +11,22 @@ const isDev = require("electron-is-dev");
 const { autoUpdater } = require("electron-updater");
 const fetch = require("node-fetch");
 const FormData = require("form-data");
+const fetchCookie = require("fetch-cookie").default;
+const tough = require("tough-cookie");
 
 const API_BASE_URL = require("./utils/apiConfig");
 
 let mainWindow;
+
+const cookieJar = new tough.CookieJar();
+const apiFetch = fetchCookie(fetch, cookieJar);
+
+const apiRequest = async (url, options = {}) => {
+  return apiFetch(url, {
+    ...options,
+    credentials: "include",
+  });
+};
 
 const createWindow = () => {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -143,7 +155,7 @@ const setupMenu = () => {
 const setupIPC = () => {
   ipcMain.handle("registerUser", async (event, data) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/signup`, {
+      const response = await apiRequest(`${API_BASE_URL}/users/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -164,14 +176,11 @@ const setupIPC = () => {
     }
   });
 
-  ipcMain.handle("verifyUser", async (event, data) => {
+  ipcMain.handle("verifyUser", async (event) => {
     try {
-      const token = data?.token;
-      if (!token) throw new Error("Token is required");
-
-      const response = await fetch(`${API_BASE_URL}/users/verifyUsers`, {
+      const response = await apiRequest(`${API_BASE_URL}/users/verifyUsers`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
 
       const resData = await response.json();
@@ -183,6 +192,7 @@ const setupIPC = () => {
         success: true,
         message: "Verified successfully",
         userExists: resData.userExists,
+        userId: resData.userId,
       };
     } catch (error) {
       return { success: false, message: error.message };
@@ -191,7 +201,7 @@ const setupIPC = () => {
 
   ipcMain.handle("loginUser", async (event, data) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/login`, {
+      const response = await apiRequest(`${API_BASE_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -207,15 +217,32 @@ const setupIPC = () => {
     }
   });
 
-  ipcMain.handle("fetchScan", async (event, { token, userId }) => {
+  ipcMain.handle("logoutUser", async () => {
     try {
-      if (!token) throw new Error("Token is required");
+      const response = await apiRequest(`${API_BASE_URL}/users/logout`, {
+        method: "POST",
+      });
+
+      cookieJar = "";
+
+      if (!response.ok) throw new Error("Logout failed");
+
+      return { success: true, message: "Logged out successfully" };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  });
+
+  ipcMain.handle("fetchScan", async (event, { userId }) => {
+    try {
       if (!userId) throw new Error("UserId is required");
 
-      const response = await fetch(`${API_BASE_URL}/users/scans/${userId}`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiRequest(
+        `${API_BASE_URL}/users/scans/${userId}`,
+        {
+          method: "GET",
+        }
+      );
 
       const resData = await response.json();
 
@@ -230,21 +257,23 @@ const setupIPC = () => {
 
   ipcMain.handle(
     "startScan",
-    async (event, { url, applicationName, scanType, userId, token }) => {
+    async (event, { url, applicationName, scanType, userId }) => {
       try {
         if (!url || !applicationName || !scanType || !userId) {
           throw new Error("Missing required scan parameters");
         }
-        if (!token) throw new Error("Authorization token is required");
 
-        const response = await fetch(`${API_BASE_URL}/pentesting/startScan`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ url, applicationName, scanType, userId }),
-        });
+        const response = await apiRequest(
+          `${API_BASE_URL}/pentesting/startScan`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({ url, applicationName, scanType, userId }),
+          }
+        );
 
         const resData = await response.json();
 
@@ -257,106 +286,100 @@ const setupIPC = () => {
     }
   );
 
-  ipcMain.handle(
-    "uploadPDF",
-    async (event, { scanId, pdfBuffer, pdfName, token }) => {
-      try {
-        if (!scanId || !pdfBuffer)
-          throw new Error("Missing scan id or PDF file path");
+  ipcMain.handle("uploadPDF", async (event, { scanId, pdfBuffer, pdfName }) => {
+    try {
+      if (!scanId || !pdfBuffer)
+        throw new Error("Missing scan id or PDF file path");
 
-        if (!token) throw new Error("Authorization token is required");
+      const buffer = Buffer.from(pdfBuffer);
 
-        const buffer = Buffer.from(pdfBuffer);
+      const formData = new FormData();
+      formData.append("scanId", scanId);
+      formData.append("pdfFile", buffer, {
+        filename: pdfName,
+        contentType: "application/pdf",
+      });
 
-        const formData = new FormData();
-        formData.append("scanId", scanId);
-        formData.append("pdfFile", buffer, {
-          filename: pdfName,
-          contentType: "application/pdf",
-        });
-
-        const response = await fetch(`${API_BASE_URL}/pentesting/uploadPdf`, {
+      const response = await apiRequest(
+        `${API_BASE_URL}/pentesting/uploadPdf`,
+        {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
           body: formData,
-        });
-
-        const resData = await response.json();
-
-        if (!response.ok) {
-          let errMessage = "Upload failed";
-          try {
-            errMessage = resData.message || errMessage;
-          } catch {
-            const errText = await response.text();
-            if (errText) errMessage = errText;
-          }
-          throw new Error(errMessage);
         }
+      );
 
-        return { success: true, ...resData };
-      } catch (error) {
-        return { success: false, message: error.message };
-      }
-    }
-  );
+      const resData = await response.json();
 
-  ipcMain.handle(
-    "downloadPDF",
-    async (event, { scanId, token, applicationName }) => {
-      try {
-        if (!scanId) throw new Error("Scan ID is required");
-        if (!token) throw new Error("Token is required");
-
-        const response = await fetch(
-          `${API_BASE_URL}/pentesting/downloadPdf/${scanId}`,
-          {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (!response.ok) {
-          let errMessage = "Failed to download PDF";
-          try {
-            const resData = await response.json();
-            errMessage = resData.message || errMessage;
-          } catch {
-            const errText = await response.text();
-            if (errText) errMessage = errText;
-          }
-          throw new Error(errMessage);
+      if (!response.ok) {
+        let errMessage = "Upload failed";
+        try {
+          errMessage = resData.message || errMessage;
+        } catch {
+          const errText = await response.text();
+          if (errText) errMessage = errText;
         }
-
-        const buffer = Buffer.from(await response.arrayBuffer());
-
-        return {
-          success: true,
-          file: buffer.toString("base64"),
-          pdfName: `${applicationName}_Security_Assessment_Report.pdf`,
-        };
-      } catch (error) {
-        return { success: false, message: error.message };
+        throw new Error(errMessage);
       }
-    }
-  );
 
-  ipcMain.handle("deleteScan", async (event, { scanIds, token }) => {
+      return { success: true, ...resData };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  });
+
+  ipcMain.handle("downloadPDF", async (event, { scanId, applicationName }) => {
+    try {
+      if (!scanId) throw new Error("Scan ID is required");
+
+      const response = await apiRequest(
+        `${API_BASE_URL}/pentesting/downloadPdf/${scanId}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        let errMessage = "Failed to download PDF";
+        try {
+          const resData = await response.json();
+          errMessage = resData.message || errMessage;
+        } catch {
+          const errText = await response.text();
+          if (errText) errMessage = errText;
+        }
+        throw new Error(errMessage);
+      }
+
+      const buffer = Buffer.from(await response.arrayBuffer());
+
+      return {
+        success: true,
+        file: buffer.toString("base64"),
+        pdfName: `${applicationName}_Security_Assessment_Report.pdf`,
+      };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  });
+
+  ipcMain.handle("deleteScan", async (event, { scanIds }) => {
     try {
       if (!scanIds || scanIds.length === 0)
         throw new Error("Scan ID(s) required");
-      if (!token) throw new Error("Token is required");
 
-      const response = await fetch(`${API_BASE_URL}/pentesting/deleteScans`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ scanIds }), // ✅ send array
-      });
+      const response = await apiRequest(
+        `${API_BASE_URL}/pentesting/deleteScans`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ scanIds }),
+        }
+      );
 
       let resData = {};
       try {

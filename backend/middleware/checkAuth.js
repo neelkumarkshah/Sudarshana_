@@ -1,34 +1,12 @@
-const jwt = require("jsonwebtoken");
-
-const HttpError = require("../models/httpError");
-const config = require("../configuration/config");
-
-module.exports = async (req, res, next) => {
-  if (req.method === "OPTIONS") {
-    return next();
-  }
-
+module.exports = (req, res, next) => {
   try {
-    const authorizationHeader = req.headers.authorization;
-
-    if (!authorizationHeader) {
-      const error = new HttpError("Authorization header missing!", 401);
-      return next(error);
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ message: "Authentication required!" });
     }
 
-    const token = await authorizationHeader.split(" ")[1];
-
-    if (!token) {
-      const error = new HttpError("Token missing!", 401);
-      return next(error);
-    }
-
-    const decodedToken = jwt.verify(token, config.JWT_SECRET);
-    req.userData = { userId: decodedToken.userId };
-
-    next();
+    req.userData = { userId: req.session.userId };
+    return next();
   } catch (err) {
-    const error = new HttpError("Authentication failed!", 403);
-    return next(error);
+    return res.status(403).json({ message: "Authentication failed!" });
   }
 };
