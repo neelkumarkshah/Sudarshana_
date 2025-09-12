@@ -21,7 +21,6 @@ const SideNav = () => {
     try {
       await window.api.invoke("logoutUser");
     } catch (err) {
-      console.error("Logout error:", err);
       alert("Something went wrong while logging out. Clearing session.");
     } finally {
       auth.logout();

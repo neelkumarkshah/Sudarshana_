@@ -18,7 +18,7 @@ const API_BASE_URL = require("./utils/apiConfig");
 
 let mainWindow;
 
-const cookieJar = new tough.CookieJar();
+let cookieJar = new tough.CookieJar();
 const apiFetch = fetchCookie(fetch, cookieJar);
 
 const apiRequest = async (url, options = {}) => {
@@ -223,7 +223,8 @@ const setupIPC = () => {
         method: "POST",
       });
 
-      cookieJar = "";
+      cookieJar.removeAllCookiesSync();
+      cookieJar = new tough.CookieJar();
 
       if (!response.ok) throw new Error("Logout failed");
 
@@ -233,14 +234,13 @@ const setupIPC = () => {
     }
   });
 
-  ipcMain.handle("fetchScan", async (event, { userId }) => {
+  ipcMain.handle("fetchScan", async (event) => {
     try {
-      if (!userId) throw new Error("UserId is required");
-
       const response = await apiRequest(
         `${API_BASE_URL}/users/scans/${userId}`,
         {
           method: "GET",
+          credentials: "include",
         }
       );
 
@@ -257,9 +257,9 @@ const setupIPC = () => {
 
   ipcMain.handle(
     "startScan",
-    async (event, { url, applicationName, scanType, userId }) => {
+    async (event, { url, applicationName, scanType }) => {
       try {
-        if (!url || !applicationName || !scanType || !userId) {
+        if (!url || !applicationName || !scanType) {
           throw new Error("Missing required scan parameters");
         }
 
@@ -271,7 +271,7 @@ const setupIPC = () => {
               "Content-Type": "application/json",
             },
             credentials: "include",
-            body: JSON.stringify({ url, applicationName, scanType, userId }),
+            body: JSON.stringify({ url, applicationName, scanType }),
           }
         );
 
@@ -341,15 +341,8 @@ const setupIPC = () => {
       );
 
       if (!response.ok) {
-        let errMessage = "Failed to download PDF";
-        try {
-          const resData = await response.json();
-          errMessage = resData.message || errMessage;
-        } catch {
-          const errText = await response.text();
-          if (errText) errMessage = errText;
-        }
-        throw new Error(errMessage);
+        const resData = await response.json().catch(() => ({}));
+        throw new Error(resData.message || "Failed to download PDF");
       }
 
       const buffer = Buffer.from(await response.arrayBuffer());
@@ -375,19 +368,13 @@ const setupIPC = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({ scanIds }),
         }
       );
 
-      let resData = {};
-      try {
-        resData = await response.json();
-      } catch {
-        resData = {};
-      }
-
+      const resData = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(resData.message || "Failed to delete scans");
       }

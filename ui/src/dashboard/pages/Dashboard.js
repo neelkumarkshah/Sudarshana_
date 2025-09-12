@@ -30,7 +30,6 @@ const Dashboard = () => {
   }, [userId, token]);
 
   useEffect(() => {
-    // Only fetch when auth details are valid
     if (userId && token) {
       fetchScanData();
     }

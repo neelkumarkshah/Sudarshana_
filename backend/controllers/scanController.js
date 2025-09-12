@@ -25,8 +25,8 @@ const StartScan = async (req, res, next) => {
     return next(new HttpError(JSON.stringify(errorMessages), 422));
   }
 
-  const { url, userId, scanType, applicationName } = req.body;
-
+  const { url, scanType, applicationName } = req.body;
+  const userId = req.userData.userId;
   const targetedUrl = url;
 
   if (userId !== req.userData.userId) {
@@ -137,16 +137,18 @@ const StartScan = async (req, res, next) => {
 };
 
 const UploadPDF = async (req, res, next) => {
-  const scanId = req.body.scanId;
+  const { scanId } = req.body;
   const pdfFile = req.file;
+  const userId = req.userData.userId;
+
   try {
     if (!scanId || !pdfFile) {
       return res.status(400).json({ message: "Missing scanId or pdfFile" });
     }
 
-    const scan = await Scan.findById(scanId);
+    const scan = await Scan.findOne({ _id: scanId, userId });
     if (!scan) {
-      return next(new HttpError("Scan not found", 404));
+      return next(new HttpError("Scan not found or unauthorized", 404));
     }
 
     scan.pdfFile = pdfFile.buffer;
@@ -165,8 +167,12 @@ const UploadPDF = async (req, res, next) => {
 const DownloadPDF = async (req, res, next) => {
   try {
     const { scanId } = req.params;
+    const userId = req.userData.userId;
 
-    const scanRecord = await Scan.findById(scanId);
+    const scanRecord = await Scan.findOne({ _id: scanId, userId });
+    if (!scanRecord || !scanRecord.pdfFile) {
+      return next(new HttpError("PDF file not found or unauthorized", 404));
+    }
 
     if (!scanRecord || !scanRecord.pdfFile) {
       return next(new HttpError("PDF file not found.", 404));
@@ -195,7 +201,6 @@ const DeleteScans = async (req, res, next) => {
     }
 
     const scans = await Scan.find({ _id: { $in: scanIds }, userId });
-
     if (scans.length === 0) {
       return next(new HttpError("No matching scans found for this user", 404));
     }

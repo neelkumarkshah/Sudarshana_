@@ -4,6 +4,7 @@ const allowedInvokeChannels = [
   "registerUser",
   "verifyUser",
   "loginUser",
+  "logoutUser",
   "fetchScan",
   "startScan",
   "uploadPDF",

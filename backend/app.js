@@ -81,10 +81,18 @@ app.use(
 // Clickjacking Protection
 app.use(helmet.frameguard({ action: "sameorigin" }));
 
+const allowedOrigins = ["http://localhost:3000"];
+
 // CORS
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || origin === "null") {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
@@ -104,14 +112,14 @@ app.use(
     store: MongoStore.create({
       mongoUrl: config.mongoURI,
       dbName: "sudarshana",
-      collectionName: "sessions",
+      collectionName: "chakra",
       ttl: ThirtyMinutes / 1000,
       crypto: { secret: process.env.SECRET },
     }),
     cookie: {
       httpOnly: true,
       secure: false,
-      sameSite: "lax",
+      sameSite: "strict",
       maxAge: ThirtyMinutes,
       path: "/",
     },
