@@ -15,19 +15,19 @@ import { useAuth } from "./shared/hooks/auth-hook";
 import Layout from "./shared/components/layout/Layout";
 
 const App = () => {
-  const { isLoggedIn, userId, login, logout } = useAuth();
+  const { isLoggedIn, userId, email, login, logout } = useAuth();
 
   let routes;
 
   if (isLoggedIn) {
     routes = (
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/" element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="pentesting" element={<PenTest />} />
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     );
   } else {
@@ -35,7 +35,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<LoginForm />} />
         <Route path="/signup" element={<RegistrationForm />} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
@@ -45,6 +45,7 @@ const App = () => {
       value={{
         isLoggedIn,
         userId,
+        email,
         login,
         logout,
       }}

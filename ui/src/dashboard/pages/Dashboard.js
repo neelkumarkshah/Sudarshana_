@@ -9,14 +9,11 @@ const Dashboard = () => {
   const [scanData, setScanData] = useState([]);
   const [errors, setErrors] = useState(null);
 
-  const { token, userId } = useAuth();
+  const { userId } = useAuth();
 
   const fetchScanData = useCallback(async () => {
     try {
-      const response = await window.api.invoke("fetchScan", {
-        token,
-        userId,
-      });
+      const response = await window.api.invoke("fetchScan");
 
       if (response?.success) {
         setScanData(response.data || []);
@@ -27,13 +24,13 @@ const Dashboard = () => {
     } catch (error) {
       setErrors(error?.message || "Unexpected error occurred.");
     }
-  }, [userId, token]);
+  }, []);
 
   useEffect(() => {
-    if (userId && token) {
+    if (userId) {
       fetchScanData();
     }
-  }, [userId, token, fetchScanData]);
+  }, [userId, fetchScanData]);
 
   useEffect(() => {
     if (errors) {
@@ -48,11 +45,7 @@ const Dashboard = () => {
     <div className={classes.dashboardPage}>
       <Row className={classes.dashboardRow}>
         <Col xs={12}>
-          <DashboardContent
-            scanData={scanData}
-            token={token}
-            refreshScans={fetchScanData}
-          />
+          <DashboardContent scanData={scanData} refreshScans={fetchScanData} />
         </Col>
         <Col xs={12}>
           {errors && (

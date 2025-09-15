@@ -62,7 +62,7 @@ const LoginForm = () => {
 
       if (response?.success) {
         setSuccessMessage("Login successful! Redirecting...");
-        auth.login(response.data.userId);
+        auth.login(response.data.userId, response.data.email);
         setTimeout(() => {
           startTransition(() => navigate("/dashboard"));
         }, 2000);

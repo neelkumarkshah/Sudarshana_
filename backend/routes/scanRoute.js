@@ -16,7 +16,6 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("Application name cannot be empty."),
-    body("userId").not().isEmpty().withMessage("User ID cannot be empty."),
     body("scanType")
       .isIn(["Web Application", "API"])
       .withMessage("Please select a valid scan type: 'web' or 'api'."),

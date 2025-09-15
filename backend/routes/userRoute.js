@@ -1,6 +1,6 @@
+// routes/userRoute.js
 const express = require("express");
 const { body } = require("express-validator");
-
 const fileStorage = require("../middleware/fileStorage");
 const userController = require("../controllers/userController");
 const isAuth = require("../middleware/checkAuth");
@@ -34,9 +34,7 @@ router.post(
 );
 
 router.post("/login", userController.Login);
-
 router.post("/logout", userController.Logout);
-
-router.get("/scans/:userId", isAuth, userController.GetUserRecords);
+router.get("/scans", isAuth, userController.GetUserRecords);
 
 module.exports = router;

@@ -79,7 +79,7 @@ const cssOverride = `
   }
 ;`;
 
-const DashboardContent = ({ scanData, token, refreshScans }) => {
+const DashboardContent = ({ scanData, refreshScans }) => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [modalMessage, setModalMessage] = useState(
     "We are preparing your PDF report, please wait..."
@@ -131,7 +131,6 @@ const DashboardContent = ({ scanData, token, refreshScans }) => {
     try {
       const response = await window.api.invoke("deleteScan", {
         scanIds: selectedScans,
-        token,
       });
 
       if (response?.success) {
@@ -168,7 +167,6 @@ const DashboardContent = ({ scanData, token, refreshScans }) => {
           try {
             const response = await window.api.invoke("downloadPDF", {
               scanId,
-              token,
               applicationName,
             });
 

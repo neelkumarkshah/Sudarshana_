@@ -161,7 +161,7 @@ const setupIPC = () => {
         body: JSON.stringify(data),
       });
 
-      const resData = await response.json();
+      const resData = await response.json().catch(() => ({}));
 
       if (!response.ok)
         throw new Error(resData.message || "Registration failed");
@@ -176,7 +176,7 @@ const setupIPC = () => {
     }
   });
 
-  ipcMain.handle("verifyUser", async (event) => {
+  ipcMain.handle("verifyUser", async () => {
     try {
       const response = await apiRequest(`${API_BASE_URL}/users/verifyUsers`, {
         method: "GET",
@@ -187,12 +187,12 @@ const setupIPC = () => {
 
       if (!response.ok)
         throw new Error(resData.message || "User verification failed");
-
+      
       return {
         success: true,
-        message: "Verified successfully",
         userExists: resData.userExists,
         userId: resData.userId,
+        email: resData.email,
       };
     } catch (error) {
       return { success: false, message: error.message };
@@ -204,10 +204,11 @@ const setupIPC = () => {
       const response = await apiRequest(`${API_BASE_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
 
-      const resData = await response.json();
+      const resData = await response.json().catch(() => ({}));
 
       if (!response.ok) throw new Error(resData.message || "Login failed");
 
@@ -221,12 +222,18 @@ const setupIPC = () => {
     try {
       const response = await apiRequest(`${API_BASE_URL}/users/logout`, {
         method: "POST",
+        credentials: "include",
       });
 
-      cookieJar.removeAllCookiesSync();
-      cookieJar = new tough.CookieJar();
+      if (cookieJar && cookieJar.removeAllCookiesSync) {
+        cookieJar.removeAllCookiesSync();
+        cookieJar = new tough.CookieJar();
+      }
 
-      if (!response.ok) throw new Error("Logout failed");
+      if (!response.ok) {
+        const resData = await response.json().catch(() => ({}));
+        throw new Error(resData.message || "Logout failed");
+      }
 
       return { success: true, message: "Logged out successfully" };
     } catch (error) {
@@ -234,18 +241,14 @@ const setupIPC = () => {
     }
   });
 
-  ipcMain.handle("fetchScan", async (event) => {
+  ipcMain.handle("fetchScan", async () => {
     try {
-      const response = await apiRequest(
-        `${API_BASE_URL}/users/scans/${userId}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+      const response = await apiRequest(`${API_BASE_URL}/users/scans`, {
+        method: "GET",
+        credentials: "include",
+      });
 
-      const resData = await response.json();
-
+      const resData = await response.json().catch(() => ({}));
       if (!response.ok)
         throw new Error(resData.message || "Failed to fetch scan data");
 
@@ -267,16 +270,13 @@ const setupIPC = () => {
           `${API_BASE_URL}/pentesting/startScan`,
           {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({ url, applicationName, scanType }),
           }
         );
 
-        const resData = await response.json();
-
+        const resData = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(resData.message || "Scan failed");
 
         return { success: true, data: resData };
@@ -288,11 +288,9 @@ const setupIPC = () => {
 
   ipcMain.handle("uploadPDF", async (event, { scanId, pdfBuffer, pdfName }) => {
     try {
-      if (!scanId || !pdfBuffer)
-        throw new Error("Missing scan id or PDF file path");
+      if (!scanId || !pdfBuffer) throw new Error("Missing scan id or PDF file");
 
       const buffer = Buffer.from(pdfBuffer);
-
       const formData = new FormData();
       formData.append("scanId", scanId);
       formData.append("pdfFile", buffer, {
@@ -309,18 +307,8 @@ const setupIPC = () => {
         }
       );
 
-      const resData = await response.json();
-
-      if (!response.ok) {
-        let errMessage = "Upload failed";
-        try {
-          errMessage = resData.message || errMessage;
-        } catch {
-          const errText = await response.text();
-          if (errText) errMessage = errText;
-        }
-        throw new Error(errMessage);
-      }
+      const resData = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(resData.message || "Upload failed");
 
       return { success: true, ...resData };
     } catch (error) {
@@ -346,7 +334,6 @@ const setupIPC = () => {
       }
 
       const buffer = Buffer.from(await response.arrayBuffer());
-
       return {
         success: true,
         file: buffer.toString("base64"),
@@ -366,18 +353,15 @@ const setupIPC = () => {
         `${API_BASE_URL}/pentesting/deleteScans`,
         {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ scanIds }),
         }
       );
 
       const resData = await response.json().catch(() => ({}));
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(resData.message || "Failed to delete scans");
-      }
 
       return {
         success: true,
