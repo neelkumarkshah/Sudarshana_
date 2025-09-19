@@ -1,4 +1,3 @@
-// routes/userRoute.js
 const express = require("express");
 const { body } = require("express-validator");
 const fileStorage = require("../middleware/fileStorage");
